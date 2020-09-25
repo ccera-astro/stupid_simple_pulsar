@@ -101,7 +101,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1072, 92)</value>
+      <value>(928, 84)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -128,7 +128,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1000, 20)</value>
+      <value>(928, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -147,7 +147,12 @@
     <key>variable</key>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Table of sample-rate vs number of
+filterbank bins
+
+OK at 400 to 600Mhz or so, but
+probably too many filterbank bins
+ at higher frequencies</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -155,7 +160,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1112, 164)</value>
+      <value>(904, 588)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -182,7 +187,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1072, 20)</value>
+      <value>(1016, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -209,7 +214,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1168, 20)</value>
+      <value>(1120, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -263,7 +268,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1152, 84)</value>
+      <value>(1112, 84)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -282,7 +287,10 @@
     <key>variable</key>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Try to compute an optimal number of
+time bins.  We increase this by 30% just
+to get a little bit of extra resolution in trade for
+a tiny penalty in SNR.</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -290,7 +298,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(808, 524)</value>
+      <value>(904, 748)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -346,7 +354,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         
         self.set_output_multiple(fbsize)
         self.delaymap = [0]*fbsize
-        delayincr = (smear/1000.0) * float(fbrate)
+        delayincr = smear * float(fbrate)
         delayincr /= float(fbsize)
         delayincr = round(delayincr)
         delayincr = int(delayincr)
@@ -519,7 +527,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Produce the folded output estimates
+Generates a mostly-valid
+JSON file
+Estimates are produced for multiple
+offsets from nominal pulse rate</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -531,7 +543,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>fbsize</key>
-      <value>2</value>
+      <value>fbsize</value>
     </param>
     <param>
       <key>filename</key>
@@ -539,7 +551,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1064, 244)</value>
+      <value>(1032, 348)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -551,7 +563,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>interval</key>
-      <value>30</value>
+      <value>logtime</value>
     </param>
     <param>
       <key>period</key>
@@ -559,7 +571,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>smear</key>
-      <value>smear*1000.0</value>
+      <value>smear</value>
     </param>
     <param>
       <key>tbins</key>
@@ -578,7 +590,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Frequency inversion</value>
     </param>
     <param>
       <key>affinity</key>
@@ -590,7 +602,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(472, 16)</value>
+      <value>(680, 40)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -633,7 +645,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(848, 188)</value>
+      <value>(416, 388)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -676,7 +688,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(432, 128)</value>
+      <value>(456, 176)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -707,7 +719,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Limit runtime</value>
     </param>
     <param>
       <key>affinity</key>
@@ -719,7 +731,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(264, 20)</value>
+      <value>(456, 52)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -758,7 +770,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Decimate down to output rate</value>
     </param>
     <param>
       <key>affinity</key>
@@ -770,7 +782,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(448, 332)</value>
+      <value>(360, 540)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -821,7 +833,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(616, 140)</value>
+      <value>(656, 188)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -860,7 +872,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Convert to stream
+Folder will convert back to vector
+internally</value>
     </param>
     <param>
       <key>affinity</key>
@@ -872,7 +886,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(600, 340)</value>
+      <value>(592, 548)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -919,7 +933,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(472, 408)</value>
+      <value>(384, 744)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -966,7 +980,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(640, 504)</value>
+      <value>(552, 840)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1005,7 +1019,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>FFT filterbank</value>
     </param>
     <param>
       <key>affinity</key>
@@ -1025,7 +1039,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(784, 24)</value>
+      <value>(856, 160)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1076,7 +1090,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(832, 408)</value>
+      <value>(728, 744)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1123,7 +1137,54 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(312, 408)</value>
+      <value>(712, 840)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>logtime</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Logging interval (seconds)</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>intx</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>30</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(224, 744)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2577,7 +2638,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(944, 408)</value>
+      <value>(224, 656)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2624,7 +2685,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(288, 504)</value>
+      <value>(216, 840)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2671,7 +2732,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(728, 408)</value>
+      <value>(632, 744)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2714,7 +2775,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Some light low-pass filtering</value>
     </param>
     <param>
       <key>affinity</key>
@@ -2726,7 +2787,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(432, 260)</value>
+      <value>(640, 380)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2769,7 +2830,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(600, 408)</value>
+      <value>(512, 744)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2816,7 +2877,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(464, 504)</value>
+      <value>(384, 840)</value>
     </param>
     <param>
       <key>_rotation</key>

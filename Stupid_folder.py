@@ -27,7 +27,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         
         self.set_output_multiple(fbsize)
         self.delaymap = [0]*fbsize
-        delayincr = (smear/1000.0) * float(fbrate)
+        delayincr = smear * float(fbrate)
         delayincr /= float(fbsize)
         delayincr = round(delayincr)
         delayincr = int(delayincr)
