@@ -109,7 +109,7 @@ for v in range(l):
 #
 plt.plot(x, numpy.divide(best["profile"], max(best["profile"])))
 plt.suptitle(name+": Best profile @ "+best["time"])
-plt.title("P0: " + str(best["p0"])+"s bins: %d" % l)
+plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2f" % (l, maxratio))
 plt.ylabel('Normalized Amplitude')
 plt.xlabel('Pulsar Phase')
 plt.grid(True)
