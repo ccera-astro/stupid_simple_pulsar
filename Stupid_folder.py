@@ -28,7 +28,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.set_output_multiple(fbsize)
         self.maxdelay = round(smear * float(fbrate))
         self.maxdelay = int(self.maxdelay)
-        self.delayincr = int(self.maxdelay / (fbsize-1))
+        self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
         
         #
         # Needed in a few places
