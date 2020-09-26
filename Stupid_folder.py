@@ -26,13 +26,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # a callback is registered (properties work, too).
         
         self.set_output_multiple(fbsize)
-        self.delaymap = [0]*fbsize
-        delayincr = smear * float(fbrate)
-        delayincr /= float(fbsize)
-        delayincr = round(delayincr)
-        delayincr = int(delayincr)
-        for i in range(fbsize):
-            self.delaymap[(fbsize-i)-1] = i*delayincr
+        self.maxdelay = round(smear * float(fbrate))
+        self.maxdelay = int(self.maxdelay)
+        self.delayincr = int(self.maxdelay / (fbsize-1))
         
         #
         # Needed in a few places
@@ -77,7 +73,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         for shift in self.shifts:
             self.tbint.append((self.p0*(1.0+shift))/float(tbins))
         
-        
         #
         # The profile length
         #   
@@ -86,7 +81,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # Sample period
         #
-        self.sper = 1.0/fbrate
+        self.sper = 1.0/float(fbrate)
         
         #
         # Mission Elapsed Time
@@ -101,16 +96,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.fname = filename
         self.sequence = 0
         
-        self.max_in = 0.0
-        self.min_in = 100000000
-        
         #
         # The logging interval
         #
         self.INTERVAL = fbrate*interval
         self.logcount = self.INTERVAL
         
-        #print "tbin %-11.7f tbinp %-11.7f tbinn %-11.7f" % (self.tbin, self.tbinp, self.tbinn)
         fp = open(self.fname, "w")
         fp.write ("[\n")
         fp.close()
@@ -119,29 +110,28 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         """Do dedispersion/folding"""
         q = input_items[0]
         l = len(q)
-        if (l > self.max_in):
-            self.max_in = l
-        elif (l < self.min_in):
-            self.min_in = l
         for i in range(l/self.flen):
+            bndx = i*self.flen
             #
             # Do delay/dedispersion logic
             #
-            if (self.delaymap[0] > 0):
+            if (self.maxdelay > 0):
                 outval = 0.0
-                for j in range(self.flen):
-                    if (self.delaymap[j] == 0):
-                        outval += q[(i*self.flen)+j]
                 #
-                # Decrement delay counters
+                # start at 1 because
+                #  we already know maxdelay > 1
                 #
-                for j in range(self.flen):
-                    if (self.delaymap[j] > 0):
-                        self.delaymap[j] -= 1
-                    else:
-                        break
+                for j in range(1,self.flen):
+                    if ((self.maxdelay - (self.delayincr*j)) <= 0):
+                        outval += q[bndx+j]
+                self.maxdelay -= 1
             else:
-                outval = sum(q[(i*self.flen):(i*self.flen)+self.flen])
+                outval = sum(q[bndx:bndx+self.flen])
+            
+            
+            #
+            # Outval now contains a single de-dispersed power sample
+            #
             
             #
             # Figure out where this sample goes in the profile buffer, based on MET
@@ -179,8 +169,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,
                     t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
                 d["sequence"] = self.sequence
-                d["max_input_length"] = self.max_in
-                d["min_input_length"] = self.min_in
                 self.sequence += 1
                 profiles = []
                 for x in range(self.nprofiles):
