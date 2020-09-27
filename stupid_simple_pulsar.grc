@@ -471,7 +471,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 where = self.MET/self.tbint[x]
                 where = int(where) % self.plen
                 self.profiles[x][where] += outval
-                self.pcounts[x][where] += 1
+                self.pcounts[x][where] += 1.0
             #
             # Increment Mission Elapsed Time
             #
