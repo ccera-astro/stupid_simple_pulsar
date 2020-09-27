@@ -172,7 +172,7 @@ probably too many filterbank bins
     </param>
     <param>
       <key>value</key>
-      <value>[2,2,4,4,8,8,8,8,16,16,16,16,32,32,32,32,32,32,64,64,64,64]</value>
+      <value>[2,2,4,4,8,8,8,8,16,16,16,16,32,32,32,32,32,32]+[32]*10</value>
     </param>
   </block>
   <block>
@@ -751,18 +751,22 @@ offsets from nominal pulse rate</value>
     </param>
   </block>
   <block>
-    <key>blocks_keep_one_in_n</key>
+    <key>blocks_integrate_xx</key>
     <param>
       <key>alias</key>
       <value></value>
     </param>
     <param>
       <key>comment</key>
-      <value>Decimate down to output rate</value>
+      <value></value>
     </param>
     <param>
       <key>affinity</key>
       <value></value>
+    </param>
+    <param>
+      <key>decim</key>
+      <value>samp_rate/fbsize/fbrate</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -770,7 +774,7 @@ offsets from nominal pulse rate</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(360, 540)</value>
+      <value>(632, 380)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -778,7 +782,11 @@ offsets from nominal pulse rate</value>
     </param>
     <param>
       <key>id</key>
-      <value>blocks_keep_one_in_n_0</value>
+      <value>blocks_integrate_xx_0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -787,14 +795,6 @@ offsets from nominal pulse rate</value>
     <param>
       <key>minoutbuf</key>
       <value>0</value>
-    </param>
-    <param>
-      <key>n</key>
-      <value>samp_rate/fbsize/fbrate</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
     </param>
     <param>
       <key>vlen</key>
@@ -2799,57 +2799,6 @@ internally</value>
     </param>
   </block>
   <block>
-    <key>single_pole_iir_filter_xx</key>
-    <param>
-      <key>alpha</key>
-      <value>1.0/(samp_rate/fbsize/fbrate*0.5)</value>
-    </param>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value>Some light low-pass filtering</value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(640, 380)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>single_pole_iir_filter_xx_0</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>fbsize</value>
-    </param>
-  </block>
-  <block>
     <key>parameter</key>
     <param>
       <key>alias</key>
@@ -2957,7 +2906,7 @@ internally</value>
   </connection>
   <connection>
     <source_block_id>blocks_complex_to_mag_squared_0</source_block_id>
-    <sink_block_id>single_pole_iir_filter_xx_0</sink_block_id>
+    <sink_block_id>blocks_integrate_xx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -2974,7 +2923,7 @@ internally</value>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_keep_one_in_n_0</source_block_id>
+    <source_block_id>blocks_integrate_xx_0</source_block_id>
     <sink_block_id>blocks_vector_to_stream_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
@@ -3000,12 +2949,6 @@ internally</value>
   <connection>
     <source_block_id>osmosdr_source_0</source_block_id>
     <sink_block_id>blocks_head_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>single_pole_iir_filter_xx_0</source_block_id>
-    <sink_block_id>blocks_keep_one_in_n_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
