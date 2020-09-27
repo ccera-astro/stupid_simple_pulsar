@@ -67,6 +67,7 @@ for profset in profsets:
     #
     # For each profile in the set
     #
+    nprof = len(profset["profiles"])
     for profile in profset["profiles"]:
         
         #
@@ -94,7 +95,7 @@ for profset in profsets:
             best["profile"] = profile["profile"]
             best["p0"] = profile["p0"]
             best["sequence"] = set_seq
-        if (args.random and (random.randint(1,1000000) % 40) == 0):
+        elif (args.random and random.randint(0,len(profsets)*nprof/2) == 0):
             #
             # Record it as "best"
             #
