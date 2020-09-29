@@ -88,7 +88,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # This is moved along at every time samples arrival--incremented
         #   by 'self.sper'
         #
-        self.MET = 0.0
+        self.MET = 0
         
         #
         # Open the output file
@@ -128,6 +128,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             else:
                 outval = sum(q[bndx:bndx+self.flen])
             
+
             
             #
             # Outval now contains a single de-dispersed power sample
@@ -140,15 +141,17 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             # Update all the profiles
             #
+            flmet = float(self.MET)*self.sper
             for x in range(self.nprofiles):
-                where = self.MET/self.tbint[x]
+                where = flmet/self.tbint[x]
                 where = int(where) % self.plen
                 self.profiles[x][where] += outval
                 self.pcounts[x][where] += 1.0
+ 
             #
             # Increment Mission Elapsed Time
             #
-            self.MET += self.sper
+            self.MET += 1
             
             #
             # Decrement the log counter

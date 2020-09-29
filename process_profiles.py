@@ -2,6 +2,7 @@
 import os
 import sys
 import json
+import math
 import matplotlib.pyplot as plt
 import numpy
 import argparse
@@ -73,19 +74,21 @@ for profset in profsets:
         #
         # Determine rough SNR
         #
-        avg = sum(profile["profile"])
-        avg -= max(profile["profile"])
-        avg /= len(profile["profile"])
+        avg = numpy.mean(profile["profile"])
         
-        mx = max(profile["profile"])
+       
+        stddev = numpy.std(profile["profile"])
+        
+
+        mx = max(profile["profile"])-avg
+        mx = mx/stddev
         
         #
         # If our rough SNR is better than what we
         #    already have...
         #
-        if (not args.random and ((mx/avg) > maxratio)):
-            maxratio = mx/avg
-            
+        if (not args.random and mx > maxratio):
+            maxratio = mx
             #
             # Record it as "best"
             #
@@ -123,7 +126,9 @@ for v in range(l):
 #
 plt.plot(x, numpy.divide(best["profile"], max(best["profile"])))
 plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
-plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2f" % (l, maxratio))
+maxratdb = math.log(maxratio)/math.log(10.0)
+maxratdb *= 10.0
+plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2fdB" % (l, maxratdb))
 plt.ylabel('Normalized Amplitude')
 plt.xlabel('Pulsar Phase')
 plt.grid(True)
