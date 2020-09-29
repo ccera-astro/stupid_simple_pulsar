@@ -143,7 +143,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             flmet = float(self.MET)*self.sper
             for x in range(self.nprofiles):
+                
                 where = flmet/self.tbint[x]
+                if ((self.MET % 2) == 0):
+                    where = round(where)
                 where = int(where) % self.plen
                 self.profiles[x][where] += outval
                 self.pcounts[x][where] += 1.0

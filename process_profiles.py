@@ -102,6 +102,7 @@ for profset in profsets:
             #
             # Record it as "best"
             #
+            maxratio = mx
             best = {}
             best["time"] = str(set_time)
             best["shift"] = profile["shift"]
@@ -126,6 +127,7 @@ for v in range(l):
 #
 plt.plot(x, numpy.divide(best["profile"], max(best["profile"])))
 plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
+
 maxratdb = math.log(maxratio)/math.log(10.0)
 maxratdb *= 10.0
 plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2fdB" % (l, maxratdb))
