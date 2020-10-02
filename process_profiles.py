@@ -20,22 +20,6 @@ name = args.name
 inlines = fp.readlines()
 
 #
-# Do a bit of fix-up on the slightly-broken JSON from the pulsar
-#  receiver.
-#
-ndx = len(inlines)-1
-
-#
-# Remove the trailing comma on the last line
-#
-inlines[ndx] = inlines[ndx].replace(",", "")
-
-#
-# Add a trailing "]" to make this a valid list
-#
-inlines.append("]\n")
-
-#
 # Turn all those lines into a single string
 #
 megastr = ""
@@ -128,8 +112,9 @@ for v in range(l):
 plt.plot(x, numpy.divide(best["profile"], max(best["profile"])))
 plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
 
-maxratdb = math.log(maxratio)/math.log(10.0)
+maxratdb = math.log(maxratio-1)/math.log(10.0)
 maxratdb *= 10.0
+
 plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2fdB" % (l, maxratdb))
 plt.ylabel('Normalized Amplitude')
 plt.xlabel('Pulsar Phase')

@@ -10,6 +10,7 @@ import numpy as np
 from gnuradio import gr
 import time
 import json
+import atexit
 
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
@@ -101,10 +102,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         self.INTERVAL = fbrate*interval
         self.logcount = self.INTERVAL
-        
-        fp = open(self.fname, "w")
-        fp.write ("[\n")
-        fp.close()
+        self.jsonlets = []
         
     def work(self, input_items, output_items):
         """Do dedispersion/folding"""
@@ -166,7 +164,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #  value of the profile.
             #
             if (self.logcount <= 0):
-                fp = open(self.fname, "a")
                 outputs = []
                 for x in range(self.nprofiles):
                     outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
@@ -184,9 +181,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     pd["shift"] = self.shifts[x]
                     profiles.append(pd)
                 d["profiles"] = profiles
-                fp.write(json.dumps(d, indent=4, sort_keys=True)+",\n")
-                fp.close()
+                self.jsonlets.append(d)
                 self.logcount = self.INTERVAL
+                fp = open(self.fname, "w")
+                fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
+                fp.close()
             
             
         return len(q)
+        
