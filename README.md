@@ -72,6 +72,7 @@ Other parameters:
 --srate     The sampl rate, in sps.  Engineering notation is supported
 --width     The pulsar width, in seconds
 --debug     Enable a special debug mode
+--sky       Set sky frequency, if different from --freq
 
 The --debug mode
 
@@ -81,6 +82,13 @@ The code has a built-in sub-graph that includes a "fake pulsar" that can be used
   signal.  To have the fake pulsar roughly 20dB below the average radio noise, use
   --debug 0.01.  To have it 30dB below the radio noise, use --debug 0.001, etc.
   
+The --sky option
 
+If this option is non-zero, then it is used as the "sky" frequency that corresponds to the
+  given *tuner* frequency specified with "--freq".  This is used in situations where there's
+  a downconversion stage, in which case, the "--freq" option only applies to the hardware settings,
+  and the "sky" frequency must be explicitly set to allow correct de-dispersion calculations.
+  
+  
 
 
