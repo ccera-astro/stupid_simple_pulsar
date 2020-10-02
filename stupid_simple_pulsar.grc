@@ -931,7 +931,7 @@ offsets from nominal pulse rate</value>
     </param>
     <param>
       <key>decim</key>
-      <value>samp_rate/fbsize/fbrate</value>
+      <value>int(samp_rate/fbsize/fbrate)</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -1322,7 +1322,7 @@ internally</value>
     </param>
     <param>
       <key>value</key>
-      <value>rtl=0</value>
+      <value>"rtl=0"</value>
     </param>
   </block>
   <block>
