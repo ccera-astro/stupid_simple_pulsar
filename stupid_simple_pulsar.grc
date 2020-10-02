@@ -3027,7 +3027,7 @@ internally</value>
     </param>
     <param>
       <key>value</key>
-      <value>output.json</value>
+      <value>"output.json"</value>
     </param>
   </block>
   <block>
