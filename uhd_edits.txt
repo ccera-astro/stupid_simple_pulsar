@@ -1,0 +1,1 @@
+update_block("options", "stupid_simple_pulsar", {"id" : "stupid_simple_pulsar_uhd"})

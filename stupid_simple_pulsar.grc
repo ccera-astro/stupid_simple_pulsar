@@ -1279,6 +1279,61 @@ internally</value>
     </param>
   </block>
   <block>
+    <key>blocks_copy</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(312, 20)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>copyblock</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>showports</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>complex</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>1</value>
+    </param>
+  </block>
+  <block>
     <key>parameter</key>
     <param>
       <key>alias</key>
@@ -2923,11 +2978,11 @@ internally</value>
     </param>
     <param>
       <key>_enabled</key>
-      <value>1</value>
+      <value>0</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(176, 80)</value>
+      <value>(112, 80)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2935,7 +2990,7 @@ internally</value>
     </param>
     <param>
       <key>id</key>
-      <value>osmosdr_source_0</value>
+      <value>osmo_radio</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -4586,11 +4641,11 @@ internally</value>
     </param>
     <param>
       <key>_enabled</key>
-      <value>0</value>
+      <value>1</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(176, 324)</value>
+      <value>(144, 324)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4598,7 +4653,7 @@ internally</value>
     </param>
     <param>
       <key>id</key>
-      <value>uhd_usrp_source_0</value>
+      <value>uhd_radio</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -4710,7 +4765,7 @@ internally</value>
     </param>
     <param>
       <key>num_mboards</key>
-      <value>2</value>
+      <value>1</value>
     </param>
     <param>
       <key>type</key>
@@ -4871,20 +4926,20 @@ internally</value>
     <sink_key>0</sink_key>
   </connection>
   <connection>
+    <source_block_id>copyblock</source_block_id>
+    <sink_block_id>blocks_head_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
     <source_block_id>fft_vxx_0</source_block_id>
     <sink_block_id>blocks_complex_to_mag_squared_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>osmosdr_source_0</source_block_id>
-    <sink_block_id>blocks_head_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>uhd_usrp_source_0</source_block_id>
-    <sink_block_id>blocks_head_0</sink_block_id>
+    <source_block_id>uhd_radio</source_block_id>
+    <sink_block_id>copyblock</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
