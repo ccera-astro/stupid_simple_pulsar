@@ -685,6 +685,53 @@ offsets from nominal pulse rate</value>
     </param>
   </block>
   <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(192, 568)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>antenna</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Antenna selector</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>string</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>"RX2"</value>
+    </param>
+  </block>
+  <block>
     <key>blocks_add_xx</key>
     <param>
       <key>alias</key>
@@ -1139,7 +1186,7 @@ offsets from nominal pulse rate</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(152, 468)</value>
+      <value>(48, 484)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1584,7 +1631,7 @@ internally</value>
     </param>
     <param>
       <key>ant0</key>
-      <value></value>
+      <value>antenna</value>
     </param>
     <param>
       <key>bb_gain0</key>
@@ -1596,7 +1643,7 @@ internally</value>
     </param>
     <param>
       <key>dc_offset_mode0</key>
-      <value>0</value>
+      <value>2</value>
     </param>
     <param>
       <key>corr0</key>
@@ -2880,7 +2927,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(152, 104)</value>
+      <value>(176, 80)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2896,11 +2943,11 @@ internally</value>
     </param>
     <param>
       <key>clock_source0</key>
-      <value>external</value>
+      <value>refclock</value>
     </param>
     <param>
       <key>time_source0</key>
-      <value></value>
+      <value>time</value>
     </param>
     <param>
       <key>clock_source1</key>
@@ -3093,6 +3140,53 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
+      <value>(368, 576)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>refclock</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>"Reference clock source"</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>string</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>"internal"</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
       <value>(720, 936)</value>
     </param>
     <param>
@@ -3266,6 +3360,53 @@ internally</value>
     </param>
   </block>
   <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(544, 576)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>time</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>"Reference time (1PPS) source"</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>string</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>"internal"</value>
+    </param>
+  </block>
+  <block>
     <key>uhd_usrp_source</key>
     <param>
       <key>alias</key>
@@ -3273,7 +3414,7 @@ internally</value>
     </param>
     <param>
       <key>ant0</key>
-      <value>RX2</value>
+      <value>antenna</value>
     </param>
     <param>
       <key>bw0</key>
@@ -4449,7 +4590,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(152, 304)</value>
+      <value>(176, 324)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4465,7 +4606,7 @@ internally</value>
     </param>
     <param>
       <key>clock_source0</key>
-      <value>external</value>
+      <value>refclock</value>
     </param>
     <param>
       <key>sd_spec0</key>
@@ -4473,7 +4614,7 @@ internally</value>
     </param>
     <param>
       <key>time_source0</key>
-      <value>external</value>
+      <value>time</value>
     </param>
     <param>
       <key>clock_source1</key>
@@ -4569,7 +4710,7 @@ internally</value>
     </param>
     <param>
       <key>num_mboards</key>
-      <value>1</value>
+      <value>2</value>
     </param>
     <param>
       <key>type</key>
