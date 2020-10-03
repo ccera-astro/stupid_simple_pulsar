@@ -108,7 +108,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         """Do dedispersion/folding"""
         q = input_items[0]
         l = len(q)
-        for i in range(l/self.flen):
+        for i in range(int(l/self.flen)):
             bndx = i*self.flen
             #
             # Do delay/dedispersion logic
