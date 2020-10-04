@@ -100,6 +100,19 @@ for profset in profsets:
 #
 x = []
 l = len(best["profile"])
+q = best["profile"]
+mxi = q.index(max(q))
+newq = numpy.zeros(l)
+
+indx = mxi
+ondx = int(l/2)
+
+for i in range(l):
+	newq[ondx] = q[indx]
+	indx += 1
+	indx = indx % l
+	ondx += 1
+	ondx = ondx % l
 #
 # Create x axis as "phase" of best profile
 #
@@ -109,7 +122,7 @@ for v in range(l):
 #
 # Plot normalized profile against "phase"
 #
-plt.plot(x, numpy.divide(best["profile"], max(best["profile"])))
+plt.plot(x, numpy.divide(newq, max(best["profile"])))
 plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
 
 maxratdb = math.log(maxratio-1.0)/math.log(10.0)

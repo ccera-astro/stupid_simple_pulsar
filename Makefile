@@ -19,7 +19,7 @@ stupid_simple_pulsar_osmo.py: $(SOURCE)
 	$(GRCC_CMD) $(BASESOURCE)_osmo.grc
 	
 install: $(TARGETS)
-	cp $(TARGETS) $(PYILES) $(PREFIX)/bin
+	cp $(TARGETS) $(PYFILES) $(PREFIX)/bin
 	chmod 755 $(PREFIX)/bin/stupid_simple_pulsar*.py
 	chmod 755 $(PREFIX)/bin/process_profiles.py
 	-ln -s -f $(PREFIX)/bin/stupid_simple_pulsar_uhd.py $(PREFIX)/bin/stupid_simple_pulsar_uhd
