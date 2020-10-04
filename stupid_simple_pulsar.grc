@@ -676,7 +676,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             flmet = float(self.MET)*self.sper
             for x in range(self.nprofiles):
-                
                 where = flmet/self.tbint[x]
                 where = int(where) % self.plen
                 self.profiles[x][where] += outval
