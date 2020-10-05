@@ -21,7 +21,7 @@ fp.close()
 
 if ("?xml" in first):
     sys.stdout.write("Input file: %s is likely XML--doing nothing\n" % sys.argv[1])
-    os.exit(0)
+    sys.exit(0)
 
 #
 # Re-open, load YAML
