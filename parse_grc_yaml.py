@@ -20,8 +20,8 @@ first=fp.readline()
 fp.close()
 
 if ("?xml" in first):
-	sys.stdout.write("Input file: %s is likely XML--doing nothing\n" % sys.argv[1])
-	os.exit(0)
+    sys.stdout.write("Input file: %s is likely XML--doing nothing\n" % sys.argv[1])
+    os.exit(0)
 
 #
 # Re-open, load YAML
@@ -34,11 +34,11 @@ fp.close()
 # Iterate through the "blocks" section
 #
 for blk in top['blocks']:
-	#
-	# Name of block matches? Update
-	#
+    #
+    # Name of block matches? Update
+    #
     if blk['name'] in blklist:
-		blk['parameters']['type'] = 'str'
+        blk['parameters']['type'] = 'str'
 
 #
 # Open outfile file and dump
