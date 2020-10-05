@@ -10,7 +10,7 @@
     </param>
     <param>
       <key>window_size</key>
-      <value>1400,1400</value>
+      <value>1800,1500</value>
     </param>
     <param>
       <key>category</key>
@@ -90,6 +90,76 @@
     </param>
   </block>
   <block>
+    <key>variable_function_probe</key>
+    <param>
+      <key>block_id</key>
+      <value>agc_probe</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>function_args</key>
+      <value></value>
+    </param>
+    <param>
+      <key>function_name</key>
+      <value>level</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1040, 176)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>agc_poller</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>[1.0]*fbsize</value>
+    </param>
+    <param>
+      <key>poll_rate</key>
+      <value>1.0/15.0</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1232, 92)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>agc_val</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>numpy.divide([1.0]*fbsize,numpy.add(agc_poller,1.0e-9))</value>
+    </param>
+  </block>
+  <block>
     <key>variable</key>
     <param>
       <key>comment</key>
@@ -101,7 +171,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(944, 892)</value>
+      <value>(1360, 756)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -128,7 +198,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1192, 684)</value>
+      <value>(1624, 572)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -156,7 +226,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1208, 844)</value>
+      <value>(1616, 644)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -183,7 +253,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1096, 84)</value>
+      <value>(1512, 84)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -210,7 +280,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1112, 20)</value>
+      <value>(1528, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -237,7 +307,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1032, 684)</value>
+      <value>(1464, 572)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -264,7 +334,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1184, 20)</value>
+      <value>(1600, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -291,7 +361,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1288, 20)</value>
+      <value>(1704, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -318,7 +388,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1176, 84)</value>
+      <value>(1592, 84)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -345,7 +415,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1272, 956)</value>
+      <value>(1624, 764)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -480,7 +550,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1296, 148)</value>
+      <value>(1712, 148)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -507,7 +577,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1280, 84)</value>
+      <value>(1696, 84)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -534,7 +604,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1032, 20)</value>
+      <value>(1448, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -774,7 +844,7 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1160, 484)</value>
+      <value>(1568, 364)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -806,26 +876,18 @@ Generates a valid JSON file</value>
     </param>
   </block>
   <block>
-    <key>analog_agc2_xx</key>
-    <param>
-      <key>attack_rate</key>
-      <value>2e-1</value>
-    </param>
+    <key>blocks_probe_signal_vx</key>
     <param>
       <key>alias</key>
       <value></value>
     </param>
     <param>
       <key>comment</key>
-      <value>Auto scale into int8</value>
+      <value></value>
     </param>
     <param>
       <key>affinity</key>
       <value></value>
-    </param>
-    <param>
-      <key>decay_rate</key>
-      <value>2e-2</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -833,39 +895,23 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1040, 248)</value>
+      <value>(1080, 116)</value>
     </param>
     <param>
       <key>_rotation</key>
       <value>0</value>
     </param>
     <param>
-      <key>gain</key>
-      <value>1.0</value>
-    </param>
-    <param>
       <key>id</key>
-      <value>analog_agc2_xx_0</value>
-    </param>
-    <param>
-      <key>max_gain</key>
-      <value>65536</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>reference</key>
-      <value>1.0</value>
+      <value>agc_probe</value>
     </param>
     <param>
       <key>type</key>
       <value>float</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
     </param>
   </block>
   <block>
@@ -938,7 +984,7 @@ This is the DEFAULT</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(704, 552)</value>
+      <value>(632, 560)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1085,7 +1131,7 @@ de-dispersion easier.</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1200, 380)</value>
+      <value>(1640, 244)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1105,7 +1151,7 @@ de-dispersion easier.</value>
     </param>
     <param>
       <key>vlen</key>
-      <value>1</value>
+      <value>fbsize</value>
     </param>
   </block>
   <block>
@@ -1128,7 +1174,7 @@ de-dispersion easier.</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1256, 276)</value>
+      <value>(1488, 260)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1152,7 +1198,7 @@ de-dispersion easier.</value>
     </param>
     <param>
       <key>vlen</key>
-      <value>1</value>
+      <value>fbsize</value>
     </param>
   </block>
   <block>
@@ -1231,7 +1277,7 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(464, 372)</value>
+      <value>(456, 372)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1266,12 +1312,11 @@ to --obstime</value>
     </param>
     <param>
       <key>comment</key>
-      <value>Filterbank mask
-all 1s for now</value>
+      <value>Filterbank mask</value>
     </param>
     <param>
       <key>const</key>
-      <value>[1.0]*fbsize</value>
+      <value>bank_mask</value>
     </param>
     <param>
       <key>affinity</key>
@@ -1283,7 +1328,7 @@ all 1s for now</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(736, 460)</value>
+      <value>(784, 484)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1292,6 +1337,108 @@ all 1s for now</value>
     <param>
       <key>id</key>
       <value>blocks_multiply_const_vxx_0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_multiply_const_vxx</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>const</key>
+      <value>[0.65]*fbsize</value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(992, 348)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_multiply_const_vxx_1</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_multiply_const_vxx</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value>Apply AGC estimate</value>
+    </param>
+    <param>
+      <key>const</key>
+      <value>agc_val</value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1248, 228)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_multiply_const_vxx_2</value>
     </param>
     <param>
       <key>type</key>
@@ -1330,7 +1477,7 @@ all 1s for now</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(416, 568)</value>
+      <value>(408, 576)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1464,6 +1611,57 @@ all 1s for now</value>
     </param>
   </block>
   <block>
+    <key>blocks_sub_xx</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1168, 552)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_sub_xx_0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>num_inputs</key>
+      <value>2</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
     <key>blocks_vector_source_x</key>
     <param>
       <key>alias</key>
@@ -1544,7 +1742,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(816, 340)</value>
+      <value>(1384, 412)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1991,7 +2189,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(528, 748)</value>
+      <value>(584, 900)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2022,7 +2220,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(632, 748)</value>
+      <value>(576, 844)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2035,6 +2233,37 @@ internally</value>
     <param>
       <key>import</key>
       <value>import math</value>
+    </param>
+  </block>
+  <block>
+    <key>import</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(696, 900)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>import_0_1</value>
+    </param>
+    <param>
+      <key>import</key>
+      <value>import numpy</value>
     </param>
   </block>
   <block>
@@ -2103,7 +2332,7 @@ like sample rate and sky frequency</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1032, 108)</value>
+      <value>(1448, 108)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2198,7 +2427,7 @@ by --debug option</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(600, 668)</value>
+      <value>(584, 764)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2207,6 +2436,37 @@ by --debug option</value>
     <param>
       <key>id</key>
       <value>note_3</value>
+    </param>
+    <param>
+      <key>note</key>
+      <value></value>
+    </param>
+  </block>
+  <block>
+    <key>note</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value>AGC estimator for scaling into int8</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1232, 12)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>note_4</value>
     </param>
     <param>
       <key>note</key>
@@ -3903,6 +4163,108 @@ by --debug option</value>
     </param>
   </block>
   <block>
+    <key>single_pole_iir_filter_xx</key>
+    <param>
+      <key>alpha</key>
+      <value>1.0/fbrate</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value>DC-block/HP filter</value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(792, 348)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>single_pole_iir_filter_xx_0</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
+    <key>single_pole_iir_filter_xx</key>
+    <param>
+      <key>alpha</key>
+      <value>1.0/(fbrate*3.0)</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1056, 28)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>single_pole_iir_filter_xx_1</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
     <key>parameter</key>
     <param>
       <key>alias</key>
@@ -4033,7 +4395,7 @@ def frqlst_to_mask(flist, fc, bw, nfb):
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1008, 804)</value>
+      <value>(1424, 684)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -5478,12 +5840,6 @@ def frqlst_to_mask(flist, fc, bw, nfb):
     </param>
   </block>
   <connection>
-    <source_block_id>analog_agc2_xx_0</source_block_id>
-    <sink_block_id>blocks_float_to_char_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
     <source_block_id>blocks_add_xx_0</source_block_id>
     <sink_block_id>blocks_multiply_const_vxx_0</sink_block_id>
     <source_key>0</source_key>
@@ -5527,7 +5883,25 @@ def frqlst_to_mask(flist, fc, bw, nfb):
   </connection>
   <connection>
     <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
-    <sink_block_id>blocks_vector_to_stream_0</sink_block_id>
+    <sink_block_id>blocks_sub_xx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
+    <sink_block_id>single_pole_iir_filter_xx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_1</source_block_id>
+    <sink_block_id>blocks_sub_xx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>1</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_2</source_block_id>
+    <sink_block_id>blocks_float_to_char_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -5550,6 +5924,24 @@ def frqlst_to_mask(flist, fc, bw, nfb):
     <sink_key>1</sink_key>
   </connection>
   <connection>
+    <source_block_id>blocks_sub_xx_0</source_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_2</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_sub_xx_0</source_block_id>
+    <sink_block_id>blocks_vector_to_stream_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_sub_xx_0</source_block_id>
+    <sink_block_id>single_pole_iir_filter_xx_1</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
     <source_block_id>blocks_vector_source_x_0</source_block_id>
     <sink_block_id>blocks_stream_to_vector_1_0</sink_block_id>
     <source_key>0</source_key>
@@ -5562,12 +5954,6 @@ def frqlst_to_mask(flist, fc, bw, nfb):
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_vector_to_stream_0</source_block_id>
-    <sink_block_id>analog_agc2_xx_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
     <source_block_id>copyblock</source_block_id>
     <sink_block_id>blocks_head_0</sink_block_id>
     <source_key>0</source_key>
@@ -5576,6 +5962,18 @@ def frqlst_to_mask(flist, fc, bw, nfb):
   <connection>
     <source_block_id>fft_vxx_0</source_block_id>
     <sink_block_id>blocks_complex_to_mag_squared_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>single_pole_iir_filter_xx_0</source_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_1</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>single_pole_iir_filter_xx_1</source_block_id>
+    <sink_block_id>agc_probe</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
