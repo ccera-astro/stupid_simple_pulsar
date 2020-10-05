@@ -88,6 +88,7 @@ Other parameters:
 --refclock  Sets the reference clock to be used
 --timesrc   Sets the time (1PPS) source to be used
 --pname     Sets the catalog pulsar name (used for filename formation)
+--fmask     List of mask frequencies--comma-separated floats
 
 The --debug mode
 
@@ -103,6 +104,12 @@ If this option is non-zero, then it is used as the "sky" frequency that correspo
   given *tuner* frequency specified with "--freq".  This is used in situations where there's
   a downconversion stage, in which case, the "--freq" option only applies to the hardware settings,
   and the "sky" frequency must be explicitly set to allow correct de-dispersion calculations.
+
+The --fmask option
+
+This option provides a list of frequencies that are known to contain RFI--it will be used to compute
+  a zap-mask on the output of the filterbank
+
   
 Output files
 

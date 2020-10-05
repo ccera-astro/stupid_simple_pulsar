@@ -93,6 +93,33 @@
     <key>variable</key>
     <param>
       <key>comment</key>
+      <value>Compute mask from command params</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(944, 892)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>bank_mask</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>st_psr_helper.frqlst_to_mask(fmask,skyf,samp_rate,fbsize)</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
       <value></value>
     </param>
     <param>
@@ -195,7 +222,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>int(ideal_fb_bins)</value>
+      <value>int(ideal_fb_bins) if fmask == "" else int(ideal_fb_bins*2)</value>
     </param>
   </block>
   <block>
@@ -806,7 +833,7 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1024, 248)</value>
+      <value>(1040, 248)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1101,7 +1128,7 @@ de-dispersion easier.</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1240, 276)</value>
+      <value>(1256, 276)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1213,6 +1240,58 @@ to --obstime</value>
     <param>
       <key>id</key>
       <value>blocks_integrate_xx_0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_multiply_const_vxx</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value>Filterbank mask
+all 1s for now</value>
+    </param>
+    <param>
+      <key>const</key>
+      <value>[1.0]*fbsize</value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(736, 460)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_multiply_const_vxx_0</value>
     </param>
     <param>
       <key>type</key>
@@ -1465,7 +1544,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(832, 388)</value>
+      <value>(816, 340)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1800,6 +1879,53 @@ internally</value>
     <param>
       <key>value</key>
       <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(584, 1184)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>fmask</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Frequency Mask</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>string</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>""</value>
     </param>
   </block>
   <block>
@@ -3871,6 +3997,54 @@ by --debug option</value>
     </param>
   </block>
   <block>
+    <key>epy_module</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>source_code</key>
+      <value># this module will be imported in the into your flowgraph
+def frqlst_to_mask(flist, fc, bw, nfb):
+    retmask = [1.0]*nfb
+    if (flist == ""):
+        return retmask
+    flow = fc - bw/2.0
+    fhigh = fc + bw/2.0
+    freqs = flist.split(",")
+    fper = bw/float(nfb)
+    for f in freqs:
+        ff = float(f)
+        if (ff &gt;= flow and ff &lt;= fhigh):
+            diff = ff - flow
+            indx = int(diff/fper)
+            retmask[indx] = 0.0
+    retmask.reverse()
+    return retmask
+</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value>A few helper functions</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1008, 804)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>st_psr_helper</value>
+    </param>
+  </block>
+  <block>
     <key>parameter</key>
     <param>
       <key>alias</key>
@@ -5311,7 +5485,7 @@ by --debug option</value>
   </connection>
   <connection>
     <source_block_id>blocks_add_xx_0</source_block_id>
-    <sink_block_id>blocks_vector_to_stream_0</sink_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -5348,6 +5522,12 @@ by --debug option</value>
   <connection>
     <source_block_id>blocks_integrate_xx_0</source_block_id>
     <sink_block_id>blocks_multiply_xx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
+    <sink_block_id>blocks_vector_to_stream_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

@@ -13,6 +13,7 @@ parser.add_argument("--infile", default=None, required=True)
 parser.add_argument("--name", default=None, required=True)
 parser.add_argument("--outfile", default=None, required=True)
 parser.add_argument("--random", action="store_true")
+parser.add_argument("--outjson", default=None)
 args = parser.parse_args()
 
 fp = open (args.infile, "r")
@@ -108,11 +109,11 @@ indx = mxi
 ondx = int(l/2)
 
 for i in range(l):
-	newq[ondx] = q[indx]
-	indx += 1
-	indx = indx % l
-	ondx += 1
-	ondx = ondx % l
+    newq[ondx] = q[indx]
+    indx += 1
+    indx = indx % l
+    ondx += 1
+    ondx = ondx % l
 #
 # Create x axis as "phase" of best profile
 #
@@ -127,9 +128,17 @@ plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]
 
 maxratdb = math.log(maxratio-1.0)/math.log(10.0)
 maxratdb *= 10.0
+best["profile"] = list(newq)
+best["snr"] = maxratio-1.0
+best["snrdB"] = maxratdb
 
 plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2fdB" % (l, maxratdb))
 plt.ylabel('Normalized Amplitude')
 plt.xlabel('Pulsar Phase')
 plt.grid(True)
 plt.savefig(args.outfile)
+
+if (args.outjson != None):
+    fp = open(args.outjson, "w")
+    fp.write(json.dumps(best, indent=4)+"\n")
+    fp.close()
