@@ -171,7 +171,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1360, 756)</value>
+      <value>(1408, 772)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -183,7 +183,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>st_psr_helper.frqlst_to_mask(fmask,skyf,samp_rate,fbsize)</value>
+      <value>st_psr_helper.frqlst_to_mask(fmask,skyf,samp_rate,fbsize,rfi_poller)</value>
     </param>
   </block>
   <block>
@@ -512,6 +512,49 @@ filterbank output file</value>
     </param>
   </block>
   <block>
+    <key>variable_function_probe</key>
+    <param>
+      <key>block_id</key>
+      <value>rfi_probe</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>function_args</key>
+      <value></value>
+    </param>
+    <param>
+      <key>function_name</key>
+      <value>level</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1248, 752)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>rfi_poller</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>[0.0001]*fbsize</value>
+    </param>
+    <param>
+      <key>poll_rate</key>
+      <value>1.0/5.0</value>
+    </param>
+  </block>
+  <block>
     <key>variable</key>
     <param>
       <key>comment</key>
@@ -523,7 +566,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(288, 276)</value>
+      <value>(280, 252)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -984,7 +1027,7 @@ This is the DEFAULT</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(632, 560)</value>
+      <value>(752, 560)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1277,7 +1320,7 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(456, 372)</value>
+      <value>(376, 412)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1312,7 +1355,7 @@ to --obstime</value>
     </param>
     <param>
       <key>comment</key>
-      <value>Filterbank mask</value>
+      <value>Implement RFI/passband-flatten</value>
     </param>
     <param>
       <key>const</key>
@@ -1328,7 +1371,7 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(784, 484)</value>
+      <value>(536, 412)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1363,7 +1406,9 @@ to --obstime</value>
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>To avoid negative values
+When only apply 65% of
+the DC estimate</value>
     </param>
     <param>
       <key>const</key>
@@ -1379,7 +1424,7 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(992, 348)</value>
+      <value>(976, 372)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1630,7 +1675,7 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1168, 552)</value>
+      <value>(1144, 528)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1729,7 +1774,7 @@ to --obstime</value>
     <param>
       <key>comment</key>
       <value>Convert to stream
-Epoch folder will convert back to vector
+Epoch folder will convert to vector
 internally</value>
     </param>
     <param>
@@ -1742,7 +1787,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1384, 412)</value>
+      <value>(1344, 452)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2467,6 +2512,39 @@ by --debug option</value>
     <param>
       <key>id</key>
       <value>note_4</value>
+    </param>
+    <param>
+      <key>note</key>
+      <value></value>
+    </param>
+  </block>
+  <block>
+    <key>note</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value>**** WARNING WARNING WARNING ****
+This flow-graph is no longer "stupid simple"
+despite the naming.  Mea Culpa</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(920, 692)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>note_5</value>
     </param>
     <param>
       <key>note</key>
@@ -4163,6 +4241,45 @@ by --debug option</value>
     </param>
   </block>
   <block>
+    <key>blocks_probe_signal_vx</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(544, 348)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>rfi_probe</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
     <key>single_pole_iir_filter_xx</key>
     <param>
       <key>alpha</key>
@@ -4186,7 +4303,7 @@ by --debug option</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(792, 348)</value>
+      <value>(768, 372)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4367,22 +4484,78 @@ by --debug option</value>
     <param>
       <key>source_code</key>
       <value># this module will be imported in the into your flowgraph
-def frqlst_to_mask(flist, fc, bw, nfb):
+import numpy
+rfi_counter = 3
+flatten_counter = 5
+smoother = None
+smoothed = False
+smoothing_estimate = None
+#
+# Process static mask-list, as well as auto RFI masking, and
+#  passband smoothing
+#
+def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
+    global rfi_counter
+    global smoother
+    global flatten_counter
+    global smoothed
+    global smoothing_estimate
+    
+    if smoother == None:
+        smoother = [1.0]*len(rfi_poller)
+        smoothing_estimate = numpy.array(rfi_poller)
+
     retmask = [1.0]*nfb
-    if (flist == ""):
-        return retmask
     flow = fc - bw/2.0
     fhigh = fc + bw/2.0
     freqs = flist.split(",")
     fper = bw/float(nfb)
-    for f in freqs:
-        ff = float(f)
-        if (ff &gt;= flow and ff &lt;= fhigh):
-            diff = ff - flow
-            indx = int(diff/fper)
-            retmask[indx] = 0.0
+    if len(flist) &gt; 0:
+        for f in freqs:
+            ff = float(f)
+            if (ff &gt;= flow and ff &lt;= fhigh):
+                diff = ff - flow
+                indx = int(diff/fper)
+                retmask[indx] = 0.0
     retmask.reverse()
-    return retmask
+    
+    #
+    # Auto RFI detect
+    #
+    if (rfi_counter &gt; 0):
+        rfi_counter -= 1
+    else:
+        avg = sum(rfi_poller)
+        avg /= len(rfi_poller)
+        idx = 0
+        for v in rfi_poller:
+            if (v &gt; avg*3.5):
+                remask[idx] = 0.0
+            idx += 1
+    
+    #
+    # Passband flattening
+    #
+    if (flatten_counter &gt; 0):
+        flatten_counter -= 1
+        smoothing_estimate = numpy.add(smoothing_estimate,rfi_poller)
+        smoothing_estimate = numpy.divide(smoothing_estimate, 2.0)
+    elif (smoothed == False):
+        #
+        # Grab the average of the central bits of the spectrum
+        #
+        avg = sum(rfi_poller[2:-2])
+        avg /= (len(rfi_poller)-4.0)
+        idx = 0
+        #
+        # Create a smoothing vector
+        #
+        for v in rfi_poller:
+            smoother[idx] = avg/v
+            idx += 1
+        smoothed = True
+    rv = numpy.multiply(smoother,retmask)
+    return rv
 </value>
     </param>
     <param>
@@ -5841,7 +6014,13 @@ def frqlst_to_mask(flist, fc, bw, nfb):
   </block>
   <connection>
     <source_block_id>blocks_add_xx_0</source_block_id>
-    <sink_block_id>blocks_multiply_const_vxx_0</sink_block_id>
+    <sink_block_id>blocks_sub_xx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_add_xx_0</source_block_id>
+    <sink_block_id>single_pole_iir_filter_xx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -5871,25 +6050,25 @@ def frqlst_to_mask(flist, fc, bw, nfb):
   </connection>
   <connection>
     <source_block_id>blocks_integrate_xx_0</source_block_id>
-    <sink_block_id>blocks_add_xx_0</sink_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>blocks_integrate_xx_0</source_block_id>
+    <sink_block_id>rfi_probe</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
+    <sink_block_id>blocks_add_xx_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
     <sink_block_id>blocks_multiply_xx_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
-    <sink_block_id>blocks_sub_xx_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
-    <sink_block_id>single_pole_iir_filter_xx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
