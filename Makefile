@@ -9,8 +9,8 @@ all: $(TARGETS)
 
 ata: stupid_simple_pulsar.py
 	grcc $(SOURCE)
-	python3 ./parse_grc_yaml.py  $(SOURCE) pname,device,timesrc,refclock,subdev,fmask,outfile $(SOURCE).tmp.grc
-	mv $(SOURCE).tmp.grc $(SOURCE)
+	-python3 ./parse_grc_yaml.py  $(SOURCE) pname,device,timesrc,refclock,subdev,fmask,outfile $(SOURCE).tmp.grc
+	-mv $(SOURCE).tmp.grc $(SOURCE)
 	grcc $(SOURCE)
 
 ata_install:
