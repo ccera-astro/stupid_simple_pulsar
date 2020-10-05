@@ -105,6 +105,9 @@ q = best["profile"]
 mxi = q.index(max(q))
 newq = numpy.zeros(l)
 
+#
+# reorder so that max signal is right in the middle
+#
 indx = mxi
 ondx = int(l/2)
 
@@ -138,6 +141,9 @@ plt.xlabel('Pulsar Phase')
 plt.grid(True)
 plt.savefig(args.outfile)
 
+#
+# Save some summary data from our best-profile search
+#
 if (args.outjson != None):
     fp = open(args.outjson, "w")
     fp.write(json.dumps(best, indent=4)+"\n")
