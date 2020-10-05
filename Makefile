@@ -7,6 +7,17 @@ GRCC_CMD=grcc -d .
 
 all: $(TARGETS)
 
+ata: stupid_simple_pulsar.py
+	grcc $(SOURCE)
+	python3 ./parse_grc_yaml.py  $(SOURCE) pname,device,timesrc,refclock,subdev,fmask,outfile $(SOURCE).tmp.grc
+	mv $(SOURCE).tmp.grc $(SOURCE)
+	grcc $(SOURCE)
+
+ata_install:
+	cp stupid_simple_pulsar.py $(PYFILES) /usr/local/bin
+	ln -s -f /usr/local/bin/stupid_simple_pulsar.py /usr/local/bin/stupid_simple_pulsar
+	ln -s -f /usr/local/bin/process_profiles.py /usr/local/bin/process_profiles
+
 clean:
 	rm -rf $(TARGETS) $(BASESOURCE)_uhd.grc $(BASESOURCE)_osmo.grc
 
