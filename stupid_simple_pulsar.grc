@@ -2187,7 +2187,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(488, 976)</value>
+      <value>(608, 976)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4115,7 +4115,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(360, 976)</value>
+      <value>(464, 976)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4143,7 +4143,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>value</key>
-      <value>b0329+54</value>
+      <value>"b0329+54"</value>
     </param>
   </block>
   <block>
@@ -4517,7 +4517,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
                 diff = ff - flow
                 indx = int(diff/fper)
                 retmask[indx] = 0.0
-    retmask.reverse()
+        retmask.reverse()
     
     #
     # Auto RFI detect
@@ -4577,6 +4577,53 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     <param>
       <key>id</key>
       <value>st_psr_helper</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(296, 976)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>subdev</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Subdev (UHD only)</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>string</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>"A:0"</value>
     </param>
   </block>
   <block>
@@ -5830,7 +5877,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     </param>
     <param>
       <key>sd_spec0</key>
-      <value></value>
+      <value>subdev</value>
     </param>
     <param>
       <key>time_source0</key>
