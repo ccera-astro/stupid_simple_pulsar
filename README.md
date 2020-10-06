@@ -1,5 +1,6 @@
 # stupid_simple_pulsar
 A very simple pulsar receiver that produces folded pulse profiles in a .json file
+That's now a bit of a lie.  It has grown "features".
 
 DEPENDENCIES
 
@@ -17,6 +18,11 @@ Just use:
 
 make
 sudo make install
+
+If you have gr-osmosdr
+
+make EXTRA_TARGET=stupid_simple_pulsar.py
+sudo make EXTRA_TARGET=stupid_simple_pulsar.py install
 
 ON a GR3.8/3.9 system:
 
