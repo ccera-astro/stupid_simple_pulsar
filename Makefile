@@ -8,6 +8,7 @@ GRCC_CMD=grcc -d .
 all: $(TARGETS)
 
 ata: stupid_simple_pulsar.py
+# Such ugly wow
 	sed -e 's/value>string/value>str/' < $(SOURCE) >$(SOURCE).tmp
 	mv $(SOURCE).tmp $(SOURCE)
 	grcc stupid_simple_pulsar.grc
