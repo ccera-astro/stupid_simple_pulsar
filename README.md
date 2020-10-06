@@ -24,6 +24,11 @@ If you have gr-osmosdr
 make EXTRA_TARGET=stupid_simple_pulsar.py
 sudo make EXTRA_TARGET=stupid_simple_pulsar.py install
 
+There are basically 2 versions of the .py files produced:
+
+stupid_simple_pulsar.py/stupid_simple_pulsar_uhd.py  -- UHD only
+stupid_simple_pulsar_osmo.py                         -- OSMOSDR
+
 ON a GR3.8/3.9 system:
 
 make GRCC_CMD="grc" 
