@@ -136,33 +136,6 @@
     <key>variable</key>
     <param>
       <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(1232, 92)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>agc_val</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>st_psr_helper.process_agc(agc_poller,bank_mask)</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
       <value>Compute mask from command params</value>
     </param>
     <param>
@@ -1459,7 +1432,7 @@ the DC estimate</value>
     </param>
     <param>
       <key>const</key>
-      <value>agc_val</value>
+      <value>st_psr_helper.process_agc(agc_poller,bank_mask)</value>
     </param>
     <param>
       <key>affinity</key>
@@ -1471,7 +1444,7 @@ the DC estimate</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1248, 228)</value>
+      <value>(1248, 196)</value>
     </param>
     <param>
       <key>_rotation</key>
