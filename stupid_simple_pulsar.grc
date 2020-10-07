@@ -4519,7 +4519,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     # Cant do any calculations if we're gettings zeros
     #
     if (0.0 in rfi_poller):
-		return retmask
+        return retmask
     #
     # Auto RFI detect
     #
