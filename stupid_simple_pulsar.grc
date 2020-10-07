@@ -1432,7 +1432,7 @@ the DC estimate</value>
     </param>
     <param>
       <key>const</key>
-      <value>st_psr_helper.process_agc(agc_poller,bank_mask)</value>
+      <value>st_psr_helper.process_agc(agc_poller)</value>
     </param>
     <param>
       <key>affinity</key>
@@ -4464,12 +4464,14 @@ smoothing_estimate = None
 # Process static mask-list, as well as auto RFI masking, and
 #  passband smoothing
 #
+most_recent_mask = None
 def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     global rfi_counter
     global smoother
     global flatten_counter
     global smoothed
     global smoothing_estimate
+    global most_recent_mask
 
     if smoother == None:
         smoother = [1.0]*len(rfi_poller)
@@ -4493,6 +4495,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     # Cant do any calculations if we're gettings zeros
     #
     if (0.0 in rfi_poller):
+        most_recent_mask = retmask
         return retmask
     #
     # Auto RFI detect
@@ -4532,7 +4535,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     print (smoother)
     print (retmask)
     rv = numpy.multiply(smoother,retmask)
-
+    most_recent_mask = rv
     return rv
 
 #
@@ -4541,10 +4544,14 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
 #
 frozen_agc = None
 agc_counter = 12
-def process_agc(av,mask):
+def process_agc(av):
     global frozen_agc
     global agc_counter
+    global most_recent_mask
 
+    print ("Being of the hereness")
+
+    mask = most_recent_mask
     #
     # Check for zeros
     #
