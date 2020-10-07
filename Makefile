@@ -44,4 +44,5 @@ install: $(TARGETS)
 	-ln -s -f $(PREFIX)/bin/stupid_simple_pulsar_uhd.py $(PREFIX)/bin/stupid_simple_pulsar_uhd
 	-ln -s -f $(PREFIX)/bin/stupid_simple_pulsar_osmo.py $(PREFIX)/bin/stupid_simple_pulsar_osmo
 	-ln -s -f $(PREFIX)/bin/stupid_simple_pulsar.py $(PREFIX)/bin/stupid_simple_pulsar
+	-ln -s -f $(PREFIX)/bin/profile_display.py $(PREFIX)/bin/profile_display
 	ln -s -f $(PREFIX)/bin/process_profiles.py $(PREFIX)/bin/process_profiles
