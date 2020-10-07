@@ -4481,6 +4481,7 @@ despite the naming.  Mea Culpa</value>
       <key>source_code</key>
       <value># this module will be imported in the into your flowgraph
 import numpy
+import sys
 rfi_counter = 3
 flatten_counter = 5
 smoother = None
@@ -4519,6 +4520,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     # Cant do any calculations if we're gettings zeros
     #
     if (0.0 in rfi_poller):
+        sys.stderr.write("Well chit\n")
         return retmask
     #
     # Auto RFI detect
@@ -4573,6 +4575,7 @@ def process_agc(av,mask):
     # Check for zeros
     #
     if (0.0 in av):
+        sys.stderr.write("Well chit2\n")
         return [1.0]*len(av)
 
     ret = numpy.array(av)
