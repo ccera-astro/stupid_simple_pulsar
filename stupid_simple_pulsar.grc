@@ -4496,7 +4496,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     global flatten_counter
     global smoothed
     global smoothing_estimate
-    
+
     if smoother == None:
         smoother = [1.0]*len(rfi_poller)
         smoothing_estimate = numpy.array(rfi_poller)
@@ -4514,7 +4514,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
                 indx = int(diff/fper)
                 retmask[indx] = 0.0
         retmask.reverse()
-    
+
     #
     # Cant do any calculations if we're gettings zeros
     #
@@ -4533,7 +4533,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
             if (v &gt; avg*3.5):
                 remask[idx] = 0.0
             idx += 1
-    
+
     #
     # Passband flattening
     #
@@ -4556,7 +4556,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
             idx += 1
         smoothed = True
     rv = numpy.multiply(smoother,retmask)
-    
+
     return rv
 
 #
@@ -4568,7 +4568,7 @@ agc_counter = 12
 def process_agc(av,mask):
     global frozen_agc
     global agc_counter
-    
+
     #
     # Check for zeros
     #
@@ -4577,11 +4577,11 @@ def process_agc(av,mask):
 
     ret = numpy.array(av)
     ret = numpy.divide([1.0]*len(av), av)
-    
+
     for i in range(len(mask)):
         if mask[i] &lt;= 0.0:
             ret[i] = 0.0
-    
+
     if (agc_counter &gt; 0):
         agc_counter -= 1
         frozen_agc = ret
