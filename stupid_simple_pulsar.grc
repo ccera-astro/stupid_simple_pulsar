@@ -136,7 +136,8 @@
     <key>variable</key>
     <param>
       <key>comment</key>
-      <value>Compute mask from command params</value>
+      <value>Compute mask from command params
+and dynamically</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -144,7 +145,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1408, 772)</value>
+      <value>(1144, 636)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -265,7 +266,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>int(ideal_fb_bins) if fmask == "" else int(ideal_fb_bins*2)</value>
+      <value>int(ideal_fb_bins)</value>
     </param>
   </block>
   <block>
@@ -353,6 +354,61 @@ filterbank output file</value>
     <key>variable</key>
     <param>
       <key>comment</key>
+      <value>Filename construction for
+filterbank header file</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1608, 772)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>hdrfilename</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>fbfilename.replace(".int8",".filh")</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1608, 892)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>header_written</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>st_psr_helper.build_header_info(hdrfilename,pname,ra,dec,skyf,samp_rate,fbrate,fbsize)</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
       <value></value>
     </param>
     <param>
@@ -373,7 +429,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>math.pow(2.0,round(math.log(smear/(width/6.0))/math.log(2.0)))</value>
+      <value>max([math.pow(2.0,round(math.log(smear/(width/8.0))/math.log(2.0))), 8])</value>
     </param>
   </block>
   <block>
@@ -388,7 +444,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1624, 764)</value>
+      <value>(1248, 844)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1905,6 +1961,53 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
+      <value>(688, 1064)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>dec</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Source DEC</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>eng_float</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>54.5</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
       <value>(160, 984)</value>
     </param>
     <param>
@@ -2496,8 +2599,9 @@ by --debug option</value>
     <param>
       <key>comment</key>
       <value>**** WARNING WARNING WARNING ****
-This flow-graph is no longer "stupid simple"
-despite the naming.  Mea Culpa</value>
+THIS FLOW-GRAPH ISN'T ACTUALLY
+STUPID-SIMPLE ANYMORE.
+YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -2505,7 +2609,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(920, 692)</value>
+      <value>(888, 724)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4131,6 +4235,53 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>_coordinate</key>
+      <value>(824, 1064)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>ra</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Source RA</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>eng_float</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>3.5</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
       <value>(160, 888)</value>
     </param>
     <param>
@@ -4455,6 +4606,9 @@ despite the naming.  Mea Culpa</value>
       <value># this module will be imported in the into your flowgraph
 import numpy
 import sys
+import time
+import struct
+
 rfi_counter = 3
 flatten_counter = 5
 smoother = None
@@ -4532,8 +4686,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
             smoother[idx] = avg/v
             idx += 1
         smoothed = True
-    print (smoother)
-    print (retmask)
+
     rv = numpy.multiply(smoother,retmask)
     most_recent_mask = rv
     return rv
@@ -4548,8 +4701,6 @@ def process_agc(av):
     global frozen_agc
     global agc_counter
     global most_recent_mask
-
-    print ("Being of the hereness")
 
     mask = most_recent_mask
     #
@@ -4571,6 +4722,185 @@ def process_agc(av):
         return ret
     else:
         return frozen_agc
+
+#
+# Convert to the weirdness that is the hybrid floating-point
+#  time format used by SIGPROC
+#
+def convert_sigproct(v):
+    itime = int(v*3600.0)
+    hours = itime/3600
+    minutes = (itime-(hours*3600))/60
+    seconds = itime - (hours*3600) - (minutes*60)
+    timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
+    return(float(timestr))
+#
+# This will cause a header block to be prepended to the output file
+#
+# Thanks to Guillermo Gancio (ganciogm@gmail.com) for the inspiration
+#   and much of the code
+#
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize):
+
+    fp = open(outfile, "w")
+    #
+    # Time for one sample, in sec
+    #
+    tsamp=1.0/fbrate
+
+    #
+    # Frequency offset between channels, in MHz
+    #
+    f_off=bw/fbsize
+    f_off /= 1.0e6
+    f_off *= -1
+
+    #
+    # Highest frequency represented in FB, in MHz
+    #
+    high_freq = freq+(bw/2.0)
+    high_freq  /= 1.0e6
+    high_freq -= (f_off/2.0)
+
+    #
+    # Lowest
+    #
+    low_freq = freq-(bw/2.0)
+    low_freq /= 1.0e6
+    low_freq += (f_off/2.0)
+
+    #
+    # Number of subbands
+    #
+    sub_bands=fbsize
+
+
+    #
+    # MJD
+    #
+    t_start = (time.time() / 86400.0) + 40587.0
+
+    #
+    # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
+    #
+    stx="HEADER_START"
+    etx="HEADER_END"
+    fp.write(struct.pack('i', len(stx))+stx)
+    fp.flush()
+    #--
+    aux="rawdatafile"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    fp.write(struct.pack('i', len(outfile))+outfile)
+    #--
+    aux="src_raj"
+    aux=struct.pack('i', len(aux))+aux
+    source_ra = convert_sigproct(source_ra)
+    fp.write(aux)
+    aux=struct.pack('d', source_ra)
+    fp.write(aux)
+    fp.flush()
+
+    #--
+    aux="src_dej"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    source_dec= convert_sigproct(source_dec)
+    aux=struct.pack('d', source_dec)
+    fp.write(aux)
+    #--
+    aux="az_start"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('d', 0.0)
+    fp.write(aux)
+    #--
+    aux="za_start"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('d', 0.0)
+    fp.write(aux)
+    #--
+    aux="tstart"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('d', float(t_start))
+    fp.write(aux)
+    #--
+    aux="foff"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('d', f_off)
+    fp.write(aux)
+    #--
+    aux="fch1"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('d', high_freq)
+    fp.write(aux)
+    #--
+    aux="nchans"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', sub_bands)
+    fp.write(aux)
+    #--
+    aux="data_type"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', 1)
+    fp.write(aux)
+    #--
+    aux="ibeam"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', 1)
+    fp.write(aux)
+    #--
+    aux="nbits"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', 8)
+    fp.write(aux)
+    #--
+    aux="tsamp"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('d', tsamp)
+    fp.write(aux)
+    #--
+    aux="nbeams"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', 1)
+    fp.write(aux)
+    #--
+    aux="nifs"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', 1)
+    fp.write(aux)
+    #--
+    aux="source_name"
+    fp.write(struct.pack('i', len(aux))+aux)
+    fp.write(struct.pack('i', len(source_name))+source_name)
+    #--
+    aux="machine_id"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', 20)
+    fp.write(aux)
+    #--
+    aux="telescope_id"
+    aux=struct.pack('i', len(aux))+aux
+    fp.write(aux)
+    aux=struct.pack('i', 20)
+    fp.write(aux)
+    #--
+    fp.write(struct.pack('i', len(etx))+etx)
+    fp.flush()
+    fp.close
+    return True
 </value>
     </param>
     <param>
