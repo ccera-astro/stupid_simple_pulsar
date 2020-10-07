@@ -15,9 +15,10 @@ ata: stupid_simple_pulsar.grc
 	grcc profile_display.grc
 
 ata_install:
-	cp stupid_simple_pulsar.py $(PYFILES) /usr/local/bin
+	cp stupid_simple_pulsar.py $(PYFILES) pulsar_display.py /usr/local/bin
 	ln -s -f /usr/local/bin/stupid_simple_pulsar.py /usr/local/bin/stupid_simple_pulsar
 	ln -s -f /usr/local/bin/process_profiles.py /usr/local/bin/process_profiles
+	ln -s -f /usr/local/bin/pulsar_display.py /usr/local/bin/pulsar_display
 
 clean:
 	rm -rf $(TARGETS) $(BASESOURCE)_uhd.grc $(BASESOURCE)_osmo.grc
