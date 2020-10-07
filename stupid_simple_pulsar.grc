@@ -4520,7 +4520,6 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
     # Cant do any calculations if we're gettings zeros
     #
     if (0.0 in rfi_poller):
-        sys.stderr.write("Well chit\n")
         return retmask
     #
     # Auto RFI detect
@@ -4557,6 +4556,8 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
             smoother[idx] = avg/v
             idx += 1
         smoothed = True
+    print (smoother)
+    print (retmask)
     rv = numpy.multiply(smoother,retmask)
 
     return rv
@@ -4575,7 +4576,6 @@ def process_agc(av,mask):
     # Check for zeros
     #
     if (0.0 in av):
-        sys.stderr.write("Well chit2\n")
         return [1.0]*len(av)
 
     ret = numpy.array(av)
