@@ -997,7 +997,7 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
@@ -1956,7 +1956,7 @@ internally</value>
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
@@ -2160,7 +2160,7 @@ internally</value>
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
@@ -4041,7 +4041,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
@@ -4135,7 +4135,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
@@ -4182,7 +4182,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
@@ -4623,7 +4623,7 @@ def process_agc(av,mask):
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
@@ -4670,7 +4670,7 @@ def process_agc(av,mask):
     </param>
     <param>
       <key>type</key>
-      <value>string</value>
+      <value>str</value>
     </param>
     <param>
       <key>value</key>
