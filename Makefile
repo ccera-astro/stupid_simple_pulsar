@@ -1,5 +1,5 @@
 PYFILES=Stupid_folder.py process_profiles.py st_psr_helper.py
-TARGETS=stupid_simple_pulsar_uhd.py stupid_simple_pulsar.py $(EXTRA_TARGET)
+TARGETS=stupid_simple_pulsar_uhd.py stupid_simple_pulsar.py $(EXTRA_TARGET) profile_display.py
 BASESOURCE=stupid_simple_pulsar
 SOURCE=$(BASESOURCE).grc
 PREFIX=/usr/local
@@ -12,6 +12,7 @@ ata: stupid_simple_pulsar.grc
 	sed -e 's/value>string/value>str/' < $(SOURCE) >$(SOURCE).tmp
 	mv $(SOURCE).tmp $(SOURCE)
 	grcc stupid_simple_pulsar.grc
+	grcc profile_display.grc
 
 ata_install:
 	cp stupid_simple_pulsar.py $(PYFILES) /usr/local/bin
@@ -32,10 +33,14 @@ stupid_simple_pulsar_osmo.py: $(SOURCE)
 stupid_simple_pulsar.py: $(SOURCE)
 	$(GRCC_CMD) $(SOURCE)
 
+profile_display.py: profile_display.grc
+	$(GRCC_CMD) profile_display.grc
+
 install: $(TARGETS)
 	cp $(TARGETS) $(PYFILES) $(PREFIX)/bin
 	chmod 755 $(PREFIX)/bin/stupid_simple_pulsar*.py
 	chmod 755 $(PREFIX)/bin/process_profiles.py
+	chmod 755 $(PREFIX)/bin/profile_display.py
 	-ln -s -f $(PREFIX)/bin/stupid_simple_pulsar_uhd.py $(PREFIX)/bin/stupid_simple_pulsar_uhd
 	-ln -s -f $(PREFIX)/bin/stupid_simple_pulsar_osmo.py $(PREFIX)/bin/stupid_simple_pulsar_osmo
 	-ln -s -f $(PREFIX)/bin/stupid_simple_pulsar.py $(PREFIX)/bin/stupid_simple_pulsar

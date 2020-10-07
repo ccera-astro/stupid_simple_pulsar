@@ -103,7 +103,16 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.INTERVAL = fbrate*interval
         self.logcount = self.INTERVAL
         self.jsonlets = []
-        
+    
+    def get_profile(self):
+        mid = int(self.nprofiles/2)
+        if (0 in self.pcounts[mid]):
+            return [0.0]*self.plen
+        l = []
+        for v in np.divide(self.profiles[mid],self.pcounts[mid]):
+            l.append(float(v))
+        return l
+
     def work(self, input_items, output_items):
         """Do dedispersion/folding"""
         q = input_items[0]
