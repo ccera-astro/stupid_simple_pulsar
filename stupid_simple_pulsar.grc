@@ -4556,8 +4556,6 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
             smoother[idx] = avg/v
             idx += 1
         smoothed = True
-    print (smoother)
-    print (retmask)
     rv = numpy.multiply(smoother,retmask)
 
     return rv
@@ -4580,6 +4578,7 @@ def process_agc(av,mask):
 
     ret = numpy.array(av)
     ret = numpy.divide([1.0]*len(av), av)
+    print ("early ret %s" % str(ret))
 
     for i in range(len(mask)):
         if mask[i] &lt;= 0.0:
@@ -4588,8 +4587,10 @@ def process_agc(av,mask):
     if (agc_counter &gt; 0):
         agc_counter -= 1
         frozen_agc = ret
+        print (ret)
         return ret
     else:
+        print (frozen_agc)
         return frozen_agc
 </value>
     </param>
