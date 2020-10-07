@@ -156,7 +156,7 @@
     </param>
     <param>
       <key>value</key>
-      <value>numpy.divide([1.0]*fbsize,numpy.add(agc_poller,1.0e-9))</value>
+      <value>st_psr_helper.process_agc(numpy.divide([1.0]*fbsize,numpy.add(agc_poller,1.0e-9)),bank_mask)</value>
     </param>
   </block>
   <block>
@@ -1078,7 +1078,7 @@ This is the DEFAULT</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(808, 212)</value>
+      <value>(808, 180)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1111,11 +1111,7 @@ This is the DEFAULT</value>
       <key>comment</key>
       <value>This effects a spectral inversion
 Many downstream tools prefer an inverted
-spectrum--likely for historical reasons.
-
-We like it because it makes some of the
-delay implementation for
-de-dispersion easier.</value>
+spectrum--likely for historical reasons.</value>
     </param>
     <param>
       <key>affinity</key>
@@ -1127,7 +1123,7 @@ de-dispersion easier.</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(744, 16)</value>
+      <value>(728, 16)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1407,7 +1403,7 @@ to --obstime</value>
     <param>
       <key>comment</key>
       <value>To avoid negative values
-When only apply 65% of
+We only apply 65% of
 the DC estimate</value>
     </param>
     <param>
@@ -2042,7 +2038,7 @@ internally</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(568, 184)</value>
+      <value>(568, 152)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4248,7 +4244,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>For auto RFI excision</value>
     </param>
     <param>
       <key>affinity</key>
@@ -4260,7 +4256,7 @@ despite the naming.  Mea Culpa</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(544, 348)</value>
+      <value>(544, 332)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4556,6 +4552,14 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
         smoothed = True
     rv = numpy.multiply(smoother,retmask)
     return rv
+
+def process_agc(av,mask):
+    ret = numpy.array(av)
+    
+    for i in range(len(mask)):
+        if mask[i] &lt;= 0.0:
+            ret[i] = 0.0
+    return ret
 </value>
     </param>
     <param>
