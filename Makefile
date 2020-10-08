@@ -1,4 +1,4 @@
-PYFILES=Stupid_folder.py process_profiles.py st_psr_helper.py
+PYFILES=Stupid_folder.py process_profiles.py st_psr_helper.py psr_display_helper.py
 TARGETS=stupid_simple_pulsar_uhd.py stupid_simple_pulsar.py $(EXTRA_TARGET) profile_display.py
 BASESOURCE=stupid_simple_pulsar
 SOURCE=$(BASESOURCE).grc
