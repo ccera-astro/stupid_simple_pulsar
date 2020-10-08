@@ -21,6 +21,7 @@ ata_install:
 	ln -s -f /usr/local/bin/stupid_simple_pulsar.py /usr/local/bin/stupid_simple_pulsar
 	ln -s -f /usr/local/bin/process_profiles.py /usr/local/bin/process_profiles
 	ln -s -f /usr/local/bin/profile_display.py /usr/local/bin/profile_display
+	chmod 755 /usr/local/bin/profile_display.py /usr/local/bin/stupid_simple_pulsar.py
 
 clean:
 	rm -rf $(TARGETS) $(BASESOURCE)_uhd.grc $(BASESOURCE)_osmo.grc

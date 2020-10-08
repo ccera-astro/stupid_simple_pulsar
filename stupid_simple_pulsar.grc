@@ -433,33 +433,6 @@ filterbank header file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1608, 892)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>header_written</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>st_psr_helper.build_header_info(hdrfilename,pname,ra,dec,skyf,samp_rate,fbrate,fbsize)</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
       <value>(1592, 84)</value>
     </param>
     <param>
