@@ -12,6 +12,8 @@ ata: stupid_simple_pulsar.grc
 	sed -e 's/value>string/value>str/' < $(SOURCE) >$(SOURCE).tmp
 	mv $(SOURCE).tmp $(SOURCE)
 	grcc stupid_simple_pulsar.grc
+	sed -e 's/value>string/value>str/' < profile_display.grc >profile_display.grc.tmp
+	mv profile_display.grc.tmp profile_display.grc
 	grcc profile_display.grc
 
 ata_install:
