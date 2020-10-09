@@ -11,11 +11,34 @@ from gnuradio import gr
 import time
 import json
 import atexit
+import ephem
+
+def cur_sidereal(longitude):
+    longstr = "%02d" % int(longitude)
+    longstr = longstr + ":"
+    longitude = abs(longitude)
+    frac = longitude - int(longitude)
+    frac *= 60
+    mins = int(frac)
+    longstr += "%02d" % mins
+    longstr += ":00"
+    x = ephem.Observer()
+    x.date = ephem.now()
+    x.long = longstr
+    jdate = ephem.julian_date(x)
+    tokens=str(x.sidereal_time()).split(":")
+    hours=int(tokens[0])
+    minutes=int(tokens[1])
+    seconds=int(float(tokens[2]))
+    sidt = "%02d,%02d,%02d" % (hours, minutes, seconds)
+    return (sidt)
 
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=10.0,period=0.714,filename='/dev/null',fbrate=2500,tbins=250,interval=30,tppms="0.0",freq=408.0e6,bw=2.56e6):  # only default arguments here
+    def __init__(self, fbsize=16,smear=10.0,period=0.714,filename='/dev/null',fbrate=2500,tbins=250,interval=30,
+        tppms="0.0",freq=408.0e6,bw=2.56e6,
+        longitude=75.984):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -106,6 +129,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         
         self.bw = bw
         self.freq = freq
+        self.longitude = longitude
     
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -181,6 +205,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 d["bw"] = self.bw
                 d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,
                     t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
+                d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
                 d["sequence"] = self.sequence
                 self.sequence += 1
                 profiles = []
