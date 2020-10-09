@@ -15,7 +15,7 @@ import atexit
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=10.0,period=0.714,filename='/dev/null',fbrate=2500,tbins=250,interval=30,tppms="0.0"):  # only default arguments here
+    def __init__(self, fbsize=16,smear=10.0,period=0.714,filename='/dev/null',fbrate=2500,tbins=250,interval=30,tppms="0.0",freq=408.0e6,bw=2.56e6):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -103,6 +103,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.INTERVAL = fbrate*interval
         self.logcount = self.INTERVAL
         self.jsonlets = []
+        
+        self.bw = bw
+        self.freq = freq
     
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -174,6 +177,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
                 d = {}
                 t = time.gmtime()
+                d["freq"] = self.freq
+                d["bw"] = self.bw
                 d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,
                     t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
                 d["sequence"] = self.sequence

@@ -255,7 +255,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>"psr-%s-%-.1f-%-.1f-%-8.2f-%d-%d.int8" % (pname, skyf/1.0e6, samp_rate/1.0e6, mjd, fbsize,fbrate)</value>
+      <value>prefix+"/psr-%s-%-.1f-%-.1f-%-8.2f-%d-%d.int8" % (pname, skyf/1.0e6, samp_rate/1.0e6, mjd, fbsize,fbrate)</value>
     </param>
   </block>
   <block>
@@ -418,7 +418,7 @@ filterbank header file</value>
     </param>
     <param>
       <key>value</key>
-      <value>fbfilename.replace(".int8",".filh")</value>
+      <value>prefix+"/"+fbfilename.replace(".int8",".filh")</value>
     </param>
   </block>
   <block>
@@ -715,7 +715,11 @@ filterbank header file</value>
     </param>
     <param>
       <key>_io_cache</key>
-      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '10.0'), ('period', '0.714'), ('filename', "'/dev/null'"), ('fbrate', '2500'), ('tbins', '250'), ('interval', '30'), ('tppms', "'0.0'")], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', [])</value>
+      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '10.0'), ('period', '0.714'), ('filename', "'/dev/null'"), ('fbrate', '2500'), ('tbins', '250'), ('interval', '30'), ('tppms', "'0.0'"), ('freq', '408000000.0'), ('bw', '2560000.0')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['bw', 'freq'])</value>
+    </param>
+    <param>
+      <key>bw</key>
+      <value>samp_rate</value>
     </param>
     <param>
       <key>_source_code</key>
@@ -736,7 +740,7 @@ import atexit
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=10.0,period=0.714,filename='/dev/null',fbrate=2500,tbins=250,interval=30,tppms="0.0"):  # only default arguments here
+    def __init__(self, fbsize=16,smear=10.0,period=0.714,filename='/dev/null',fbrate=2500,tbins=250,interval=30,tppms="0.0",freq=408.0e6,bw=2.56e6):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -824,6 +828,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.INTERVAL = fbrate*interval
         self.logcount = self.INTERVAL
         self.jsonlets = []
+        
+        self.bw = bw
+        self.freq = freq
     
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -895,6 +902,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
                 d = {}
                 t = time.gmtime()
+                d["freq"] = self.freq
+                d["bw"] = self.bw
                 d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,
                     t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
                 d["sequence"] = self.sequence
@@ -937,11 +946,15 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>filename</key>
-      <value>outfile</value>
+      <value>prefix+"/"+outfile</value>
+    </param>
+    <param>
+      <key>freq</key>
+      <value>skyf</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1568, 364)</value>
+      <value>(1576, 340)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4307,6 +4320,53 @@ YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>_coordinate</key>
+      <value>(352, 1272)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>prefix</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>filename prefix</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>string</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>"."</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
       <value>(824, 1064)</value>
     </param>
     <param>
@@ -4812,6 +4872,8 @@ def convert_sigproct(v):
 # Thanks to Guillermo Gancio (ganciogm@gmail.com) for the inspiration
 #   and much of the code
 #
+# This seems to be broken for Python3
+#
 def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize):
 
     fp = open(outfile, "w")
@@ -4969,7 +5031,8 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     aux=struct.pack('i', 20)
     fp.write(aux)
     #--
-    fp.write(struct.pack('i', len(etx))+etx)
+    fp.write(struct.pack('i', len(etx)))
+    fp.write(etx)
     fp.flush()
     fp.close
     return True
