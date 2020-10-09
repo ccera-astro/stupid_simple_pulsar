@@ -49,6 +49,7 @@ for profset in profsets:
 
     set_time = profset["time"]
     set_seq = profset["sequence"]
+    set_lmst = profset["lmst"]
     
     #
     # For each profile in the set
@@ -90,6 +91,7 @@ for profset in profsets:
             maxratio = mx
             best = {}
             best["time"] = str(set_time)
+            best["lmst"] = set_lmst
             best["shift"] = profile["shift"]
             best["profile"] = profile["profile"]
             best["p0"] = profile["p0"]
