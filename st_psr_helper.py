@@ -57,7 +57,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
         idx = 0
         for v in rfi_poller:
             if (v > avg*3.5):
-                remask[idx] = 0.0
+                retmask[idx] = 0.0
             idx += 1
 
     #

@@ -49,7 +49,7 @@ for profset in profsets:
 
     set_time = profset["time"]
     set_seq = profset["sequence"]
-    set_lmst = profset["lmst"]
+    #set_lmst = profset["lmst"]
     
     #
     # For each profile in the set

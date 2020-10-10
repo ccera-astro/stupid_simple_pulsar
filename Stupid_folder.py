@@ -12,6 +12,9 @@ import time
 import json
 import atexit
 import ephem
+import math
+
+
 
 def cur_sidereal(longitude):
     longstr = "%02d" % int(longitude)
@@ -160,7 +163,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                         outval += q[bndx+j]
                 self.maxdelay -= 1
             else:
-                outval = sum(q[bndx:bndx+self.flen])
+                outval = math.fsum(q[bndx:bndx+self.flen])
             
             
             #
