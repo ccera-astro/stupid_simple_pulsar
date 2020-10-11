@@ -144,6 +144,18 @@ def process_agc(av):
     else:
         return numpy.multiply(frozen_agc,mask)
 
+       
+def find_rate(srate,fbsize,target):
+    brate = float(srate)/float(fbsize)
+    decim = float(brate)/float(target)
+
+    if (decim == float(int(decim))):
+		return target
+    for r in numpy.arange(target/2,target*3.0,5.0):
+        decim = float(brate)/float(r)
+        if (decim == float(int(decim))):
+            return r
+            
 
 #
 # Convert to the weirdness that is the hybrid floating-point

@@ -14,8 +14,6 @@ import atexit
 import ephem
 import math
 
-
-
 def cur_sidereal(longitude):
     longstr = "%02d" % int(longitude)
     longstr = longstr + ":"
@@ -39,7 +37,7 @@ def cur_sidereal(longitude):
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=10.0,period=0.714,filename='/dev/null',fbrate=2500,tbins=250,interval=30,
+    def __init__(self, fbsize=16,smear=10.0,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
         longitude=75.984):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
@@ -103,7 +101,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # The profile length
         #   
-        self.plen = tbins
+        self.plen = int(tbins)
         
         #
         # Sample period
@@ -115,7 +113,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # This is moved along at every time samples arrival--incremented
         #   by 'self.sper'
         #
-        self.MET = 0
+        self.MET = 0.0
         
         #
         # Open the output file
@@ -177,17 +175,16 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             # Update all the profiles
             #
-            flmet = float(self.MET)*self.sper
             for x in range(self.nprofiles):
-                where = flmet/self.tbint[x]
-                where = int(where) % self.plen
+                where = self.MET/self.tbint[x]
+                where = int(where) % int(self.plen)
                 self.profiles[x][where] += outval
                 self.pcounts[x][where] += 1.0
  
             #
             # Increment Mission Elapsed Time
             #
-            self.MET += 1
+            self.MET += self.sper
             
             #
             # Decrement the log counter
@@ -229,4 +226,4 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             
             
         return len(q)
-        
+
