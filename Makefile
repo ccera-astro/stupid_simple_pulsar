@@ -12,7 +12,7 @@ ata: stupid_simple_pulsar.grc
 	sed -e 's/value>string/value>str/' < $(SOURCE) >$(SOURCE).tmp
 	mv $(SOURCE).tmp $(SOURCE)
 	grcc stupid_simple_pulsar.grc
-	sed -e 's/allow_none=True/allow_none=True,logRequests=False' <stupid_simple_pulsar.py >tempy
+	sed -e 's/allow_none=True/allow_none=True,logRequests=False/' <stupid_simple_pulsar.py >tempy
 	mv tempy stupid_simple_pulsar.py
 	sed -e 's/value>string/value>str/' < profile_display.grc >profile_display.grc.tmp
 	mv profile_display.grc.tmp profile_display.grc
