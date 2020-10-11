@@ -90,6 +90,33 @@
     </param>
   </block>
   <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(456, 348)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>dlen</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>1024</value>
+    </param>
+  </block>
+  <block>
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
@@ -113,7 +140,7 @@
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(544, 352)</value>
+      <value>(552, 352)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -125,38 +152,11 @@
     </param>
     <param>
       <key>value</key>
-      <value>[1.0]*pbins</value>
+      <value>[1.0]*dlen</value>
     </param>
     <param>
       <key>poll_rate</key>
       <value>3</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(384, 460)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>pbins</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>int(period/width)</value>
     </param>
   </block>
   <block>
@@ -222,7 +222,7 @@
     </param>
     <param>
       <key>vlen</key>
-      <value>pbins</value>
+      <value>dlen</value>
     </param>
   </block>
   <block>
@@ -284,7 +284,7 @@
     </param>
     <param>
       <key>const</key>
-      <value>psr_display_helper.get_profile(pbins,pacer,port)</value>
+      <value>psr_display_helper.get_profile(pacer,port,dlen)</value>
     </param>
     <param>
       <key>affinity</key>
@@ -320,7 +320,7 @@
     </param>
     <param>
       <key>vlen</key>
-      <value>pbins</value>
+      <value>dlen</value>
     </param>
   </block>
   <block>
@@ -367,7 +367,7 @@
     </param>
     <param>
       <key>num_items</key>
-      <value>pbins</value>
+      <value>dlen</value>
     </param>
     <param>
       <key>vlen</key>
@@ -645,20 +645,57 @@ try:
     import xmlrpclib as xmlrpc
 except:
     import xmlrpc.client as xmlrpc
+import numpy
+import random
+
 
 rpchandle = None
 inited = False
-def get_profile(nbins,pacer,port):
+def get_profile(pacer,port,outsize):
     global rpchandle
     global inited
+    outp = [0.0]*outsize
     try:
         if (inited == False):
             rpchandle = xmlrpc.ServerProxy("http://localhost:%d" % port, allow_none=True)
         r = rpchandle.get_current_profile()
-        inited = True
+        r = numpy.divide(r,max(r))
+        r = list(r)
+        
+        #
+        # Re-center
+        #
+        l = len(r)
+        newr = numpy.zeros(l)
+        indx = r.index(max(r))
+        ondx = int(l/2)
+        for i in range(l):
+            newr[ondx] = r[indx]
+            indx += 1
+            indx = indx % l
+            
+            ondx += 1
+            ondx = ondx % l
     except:
-        return ([0.0]*nbins)
-    return r
+        return ([0.0]*outsize)
+    
+    ratio = int(outsize / l)
+
+    numf = 0
+    for i in range(l):
+        for j in range(ratio):
+            outp[(i*ratio)+j] = newr[i]
+            numf += 1
+
+    numneeded = outsize-numf
+    for i in range((outsize-numneeded)-1,outsize):
+        outp[i] = newr[random.randint(0,l-1)]
+    y = outp[0]
+    newoutp = []
+    for i in range(outsize):
+        y = outp[i]*0.2 + y*0.80
+        newoutp.append(y)
+    return newoutp
     
 </value>
     </param>
@@ -899,7 +936,7 @@ def get_profile(nbins,pacer,port):
     </param>
     <param>
       <key>name</key>
-      <value>"Pulsar Profile: %s" % pname</value>
+      <value>"Normalized Pulsar Profile: %s" % pname</value>
     </param>
     <param>
       <key>nconnections</key>
@@ -919,7 +956,7 @@ def get_profile(nbins,pacer,port):
     </param>
     <param>
       <key>vlen</key>
-      <value>pbins</value>
+      <value>dlen</value>
     </param>
     <param>
       <key>x_axis_label</key>
@@ -931,7 +968,7 @@ def get_profile(nbins,pacer,port):
     </param>
     <param>
       <key>x_step</key>
-      <value>1.0/pbins</value>
+      <value>1.0/dlen</value>
     </param>
     <param>
       <key>x_units</key>
@@ -939,7 +976,7 @@ def get_profile(nbins,pacer,port):
     </param>
     <param>
       <key>ymax</key>
-      <value>0.05</value>
+      <value>2.0</value>
     </param>
     <param>
       <key>ymin</key>
@@ -952,6 +989,53 @@ def get_profile(nbins,pacer,port):
     <param>
       <key>y_units</key>
       <value>""</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(872, 448)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>res</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Resolution multiplier</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>intx</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>1</value>
     </param>
   </block>
   <block>

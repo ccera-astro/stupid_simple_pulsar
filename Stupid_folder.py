@@ -126,7 +126,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # The logging interval
         #
-        self.INTERVAL = fbrate*interval
+        self.INTERVAL = int(fbrate*interval)
         self.logcount = self.INTERVAL
         self.jsonlets = []
         
@@ -204,6 +204,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
                 d = {}
                 t = time.gmtime()
+                d["sampletime"] = self.sper
+                d["samplerate"] = 1.0/self.sper
                 d["freq"] = self.freq
                 d["bw"] = self.bw
                 d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,

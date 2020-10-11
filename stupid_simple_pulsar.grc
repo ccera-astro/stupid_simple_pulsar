@@ -157,7 +157,7 @@ and dynamically</value>
     </param>
     <param>
       <key>value</key>
-      <value>st_psr_helper.frqlst_to_mask(fmask,skyf,samp_rate,fbsize,rfi_poller)</value>
+      <value>st_psr_helper.frqlst_to_mask(fmask,skyf,samp_rate,fbsize,rfi_poller,mjd,prefix,pname)</value>
     </param>
   </block>
   <block>
@@ -529,6 +529,37 @@ filterbank output file</value>
     </param>
   </block>
   <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value>Command-line drate/fbrate
+is a TARGET rate
+Actual rate will be different
+due to integer decimation
+effects</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1272, 12)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>real_fbrate</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>float(samp_rate/fbsize)/float(int(samp_rate/fbsize)/int(fbrate))</value>
+    </param>
+  </block>
+  <block>
     <key>variable_function_probe</key>
     <param>
       <key>block_id</key>
@@ -823,7 +854,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # The logging interval
         #
-        self.INTERVAL = fbrate*interval
+        self.INTERVAL = int(fbrate*interval)
         self.logcount = self.INTERVAL
         self.jsonlets = []
         
@@ -901,6 +932,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
                 d = {}
                 t = time.gmtime()
+                d["sampletime"] = self.sper
+                d["samplerate"] = 1.0/self.sper
                 d["freq"] = self.freq
                 d["bw"] = self.bw
                 d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,
@@ -938,7 +971,7 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>fbrate</key>
-      <value>fbrate</value>
+      <value>real_fbrate</value>
     </param>
     <param>
       <key>fbsize</key>
@@ -1009,7 +1042,7 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1080, 116)</value>
+      <value>(1056, 92)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1479,7 +1512,7 @@ the DC estimate</value>
     </param>
     <param>
       <key>const</key>
-      <value>[0.65]*fbsize</value>
+      <value>[0.60]*fbsize</value>
     </param>
     <param>
       <key>affinity</key>
@@ -1542,7 +1575,7 @@ the DC estimate</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1248, 196)</value>
+      <value>(1272, 220)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2711,7 +2744,7 @@ by --debug option</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1232, 12)</value>
+      <value>(1224, 140)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4657,7 +4690,7 @@ YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(544, 332)</value>
+      <value>(592, 332)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4751,7 +4784,7 @@ YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1056, 28)</value>
+      <value>(1040, 4)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -4760,6 +4793,57 @@ YOU'VE BEEN WARNED</value>
     <param>
       <key>id</key>
       <value>single_pole_iir_filter_xx_1</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
+    <key>single_pole_iir_filter_xx</key>
+    <param>
+      <key>alpha</key>
+      <value>0.25</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(384, 340)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>single_pole_iir_filter_xx_2</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -4885,24 +4969,29 @@ import numpy
 import sys
 import time
 import struct
+import json
 
 rfi_counter = 3
 flatten_counter = 5
 smoother = None
 smoothed = False
 smoothing_estimate = None
+rfi_logging_counter = 12
+mask_log_list = []
 #
 # Process static mask-list, as well as auto RFI masking, and
 #  passband smoothing
 #
 most_recent_mask = None
-def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
+def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
     global rfi_counter
     global smoother
     global flatten_counter
     global smoothed
     global smoothing_estimate
     global most_recent_mask
+    global rfi_logging_counter
+    global mask_log_list
 
     if smoother == None:
         smoother = [1.0]*len(rfi_poller)
@@ -4964,8 +5053,26 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
             idx += 1
         smoothed = True
 
+    
     rv = numpy.multiply(smoother,retmask)
     most_recent_mask = rv
+    rfi_logging_counter -= 1
+    if (rfi_logging_counter &lt; 0):
+        rfi_logging_counter = 12
+        d = {}
+        ltp = time.gmtime()
+        ltime = "%04d%02d%02d-%02d:%02d:%02d" % (ltp.tm_year,
+            ltp.tm_mon, ltp.tm_mday, ltp.tm_hour,
+            ltp.tm_min, ltp.tm_sec)
+        d["rfimask"] = list(retmask)
+        d["smoothing"] = list(smoother)
+        d["spectrum"] = list(numpy.multiply(numpy.log10(rfi_poller),10.0))
+        d["time"] = ltime
+        mask_log_list.append(d)
+        fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
+        fp = open(fn, "w")
+        fp.write(json.dumps(mask_log_list,indent=4)+"\n")
+        
     return rv
 
 #
@@ -6767,7 +6874,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
   </connection>
   <connection>
     <source_block_id>blocks_integrate_xx_0</source_block_id>
-    <sink_block_id>rfi_probe</sink_block_id>
+    <sink_block_id>single_pole_iir_filter_xx_2</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -6864,6 +6971,12 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
   <connection>
     <source_block_id>single_pole_iir_filter_xx_1</source_block_id>
     <sink_block_id>agc_probe</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>single_pole_iir_filter_xx_2</source_block_id>
+    <sink_block_id>rfi_probe</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

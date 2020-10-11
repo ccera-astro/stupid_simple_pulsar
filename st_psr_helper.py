@@ -3,24 +3,29 @@ import numpy
 import sys
 import time
 import struct
+import json
 
 rfi_counter = 3
 flatten_counter = 5
 smoother = None
 smoothed = False
 smoothing_estimate = None
+rfi_logging_counter = 12
+mask_log_list = []
 #
 # Process static mask-list, as well as auto RFI masking, and
 #  passband smoothing
 #
 most_recent_mask = None
-def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
+def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
     global rfi_counter
     global smoother
     global flatten_counter
     global smoothed
     global smoothing_estimate
     global most_recent_mask
+    global rfi_logging_counter
+    global mask_log_list
 
     if smoother == None:
         smoother = [1.0]*len(rfi_poller)
@@ -82,8 +87,26 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller):
             idx += 1
         smoothed = True
 
+    
     rv = numpy.multiply(smoother,retmask)
     most_recent_mask = rv
+    rfi_logging_counter -= 1
+    if (rfi_logging_counter < 0):
+        rfi_logging_counter = 12
+        d = {}
+        ltp = time.gmtime()
+        ltime = "%04d%02d%02d-%02d:%02d:%02d" % (ltp.tm_year,
+            ltp.tm_mon, ltp.tm_mday, ltp.tm_hour,
+            ltp.tm_min, ltp.tm_sec)
+        d["rfimask"] = list(retmask)
+        d["smoothing"] = list(smoother)
+        d["spectrum"] = list(numpy.multiply(numpy.log10(rfi_poller),10.0))
+        d["time"] = ltime
+        mask_log_list.append(d)
+        fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
+        fp = open(fn, "w")
+        fp.write(json.dumps(mask_log_list,indent=4)+"\n")
+        
     return rv
 
 #
