@@ -5058,7 +5058,7 @@ def find_rate(srate,fbsize,target):
     decim = float(brate)/float(target)
 
     if (decim == float(int(decim))):
-		return target
+        return target
     for r in numpy.arange(target/2,target*3.0,5.0):
         decim = float(brate)/float(r)
         if (decim == float(int(decim))):
