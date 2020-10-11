@@ -90,7 +90,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
 
     
     rv = numpy.multiply(smoother,retmask)
-    most_recent_mask = rv
+    most_recent_mask = retmask
     rfi_logging_counter -= 1
     if (rfi_logging_counter < 0):
         rfi_logging_counter = 12
@@ -141,7 +141,7 @@ def process_agc(av):
         frozen_agc = ret
         return ret
     else:
-        return frozen_agc
+        return numpy.multiply(frozen_agc,mask)
 
 #
 # Convert to the weirdness that is the hybrid floating-point

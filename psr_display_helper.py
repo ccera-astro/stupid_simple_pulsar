@@ -54,6 +54,7 @@ def get_profile(pacer,port,outsize):
             numf += 1
 
     numneeded = outsize-numf
+    
     for i in range((outsize-numneeded)-1,outsize):
         outp[i] = newr[l-1]
     y = outp[0]
