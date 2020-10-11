@@ -169,6 +169,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             
             #
+            # Increment Mission Elapsed Time
+            #
+            self.MET += self.sper
+            #
             # Determine where the current sample is to be placed in the
             #  time/phase bin buffer.
             #
@@ -176,11 +180,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #   a slightly-different estimate for P0).
             #
             for x in range(self.nprofiles):
-				#
-				# This re-expresses self.MET in terms of number of
-				#   time/phase bins for ths particular estimate of
-				#   P0.
-				#
+                #
+                # This re-expresses self.MET in terms of number of
+                #   time/phase bins for ths particular estimate of
+                #   P0.
+                #
                 where = round(self.MET/self.tbint[x])
                 
                 #
@@ -201,11 +205,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #
                 self.profiles[x][where] += outval
                 self.pcounts[x][where] += 1.0
- 
-            #
-            # Increment Mission Elapsed Time
-            #
-            self.MET += self.sper
             
             #
             # Decrement the log counter
