@@ -26,6 +26,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
     global most_recent_mask
     global rfi_logging_counter
     global mask_log_list
+    global frozen_agc
 
     if smoother == None:
         smoother = [1.0]*len(rfi_poller)
@@ -102,6 +103,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
         d["smoothing"] = list(smoother)
         d["spectrum"] = list(numpy.multiply(numpy.log10(rfi_poller),10.0))
         d["time"] = ltime
+        d["frozen_agc"] = list(frozen_agc)
         mask_log_list.append(d)
         fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
         fp = open(fn, "w")
@@ -128,7 +130,7 @@ def process_agc(av):
         return [1.0]*len(av)
 
     ret = numpy.array(av)
-    ret = numpy.divide([1.0]*len(av), av)
+    ret = numpy.divide([0.90]*len(av), av)
 
     for i in range(len(mask)):
         if mask[i] <= 0.0:

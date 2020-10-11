@@ -129,7 +129,7 @@
     </param>
     <param>
       <key>poll_rate</key>
-      <value>1.0/10.0</value>
+      <value>1.0/8.0</value>
     </param>
   </block>
   <block>
@@ -1345,58 +1345,6 @@ spectrum--likely for historical reasons.</value>
     </param>
   </block>
   <block>
-    <key>blocks_head</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value>Limit runtime
-to --obstime</value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(552, 12)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>blocks_head_0</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>num_items</key>
-      <value>samp_rate*obstime</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>complex</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>1</value>
-    </param>
-  </block>
-  <block>
     <key>blocks_integrate_xx</key>
     <param>
       <key>alias</key>
@@ -1919,14 +1867,15 @@ internally</value>
     </param>
   </block>
   <block>
-    <key>blocks_copy</key>
+    <key>blocks_head</key>
     <param>
       <key>alias</key>
       <value></value>
     </param>
     <param>
       <key>comment</key>
-      <value></value>
+      <value>Limit runtime
+to --obstime</value>
     </param>
     <param>
       <key>affinity</key>
@@ -1937,12 +1886,8 @@ internally</value>
       <value>True</value>
     </param>
     <param>
-      <key>enabled</key>
-      <value>True</value>
-    </param>
-    <param>
       <key>_coordinate</key>
-      <value>(368, 12)</value>
+      <value>(552, 12)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1961,8 +1906,8 @@ internally</value>
       <value>0</value>
     </param>
     <param>
-      <key>showports</key>
-      <value>True</value>
+      <key>num_items</key>
+      <value>samp_rate*obstime</value>
     </param>
     <param>
       <key>type</key>
@@ -4992,6 +4937,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
     global most_recent_mask
     global rfi_logging_counter
     global mask_log_list
+    global frozen_agc
 
     if smoother == None:
         smoother = [1.0]*len(rfi_poller)
@@ -5068,6 +5014,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
         d["smoothing"] = list(smoother)
         d["spectrum"] = list(numpy.multiply(numpy.log10(rfi_poller),10.0))
         d["time"] = ltime
+        d["frozen_agc"] = list(frozen_agc)
         mask_log_list.append(d)
         fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
         fp = open(fn, "w")
@@ -5094,7 +5041,7 @@ def process_agc(av):
         return [1.0]*len(av)
 
     ret = numpy.array(av)
-    ret = numpy.divide([1.0]*len(av), av)
+    ret = numpy.divide([0.90]*len(av), av)
 
     for i in range(len(mask)):
         if mask[i] &lt;= 0.0:
@@ -6861,12 +6808,6 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_head_0</source_block_id>
-    <sink_block_id>blocks_conjugate_cc_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
     <source_block_id>blocks_integrate_xx_0</source_block_id>
     <sink_block_id>blocks_multiply_const_vxx_0</sink_block_id>
     <source_key>0</source_key>
@@ -6952,7 +6893,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
   </connection>
   <connection>
     <source_block_id>copyblock</source_block_id>
-    <sink_block_id>blocks_head_0</sink_block_id>
+    <sink_block_id>blocks_conjugate_cc_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

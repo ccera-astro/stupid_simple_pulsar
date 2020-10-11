@@ -7,6 +7,14 @@ import numpy
 import random
 
 
+def get_pname(port):
+    try:
+        rpchandle = xmlrpc.ServerProxy("http://localhost:%d" % port, allow_none=True)
+        r = rpchandle.get_pname()
+    except:
+        r = "????"
+    return r
+
 rpchandle = None
 inited = False
 def get_profile(pacer,port,outsize):
@@ -47,7 +55,7 @@ def get_profile(pacer,port,outsize):
 
     numneeded = outsize-numf
     for i in range((outsize-numneeded)-1,outsize):
-        outp[i] = newr[random.randint(0,l-1)]
+        outp[i] = newr[l-1]
     y = outp[0]
     newoutp = []
     for i in range(outsize):
