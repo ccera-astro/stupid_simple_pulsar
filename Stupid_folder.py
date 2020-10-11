@@ -39,7 +39,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
     def __init__(self, fbsize=16,smear=10.0,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
-        longitude=75.984):  # only default arguments here
+        longitude=-75.984):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -169,15 +169,36 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             
             #
-            # Figure out where this sample goes in the profile buffer, based on MET
-            # We place the next sample based on the MET, re-expressed in terms of
-            #   total time-bins (self.tbint) modulo the profile length
+            # Determine where the current sample is to be placed in the
+            #  time/phase bin buffer.
             #
-            # Update all the profiles
+            # Update all the time/phase bins (we have a number of profiles, each with
+            #   a slightly-different estimate for P0).
             #
             for x in range(self.nprofiles):
-                where = self.MET/self.tbint[x]
+				#
+				# This re-expresses self.MET in terms of number of
+				#   time/phase bins for ths particular estimate of
+				#   P0.
+				#
+                where = round(self.MET/self.tbint[x])
+                
+                #
+                # Convert that to an int, then reduce modulo number
+                #  of time/phase bins in a single estimate
+                #  normally there'll be P0/W50 bins, possibly
+                #  expanded by some small-integer ratio.
+                #
+                # J0332+5434, for example, gives an optimal number
+                #   of time/phase bins of 108 but you might want to
+                #   extend that to 216 to get higher-resolution on
+                #   the pulse profile.
+                #
                 where = int(where) % int(self.plen)
+                
+                #
+                # Update appropriate time/phase bin
+                #
                 self.profiles[x][where] += outval
                 self.pcounts[x][where] += 1.0
  

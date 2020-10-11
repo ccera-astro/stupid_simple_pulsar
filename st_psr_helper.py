@@ -146,12 +146,20 @@ def process_agc(av):
 
        
 def find_rate(srate,fbsize,target):
+	
     brate = float(srate)/float(fbsize)
     decim = float(brate)/float(target)
 
+    #
+    # If target FBRATE is already integral
+    #
     if (decim == float(int(decim))):
         return target
-    for r in numpy.arange(target/2,target*3.0,5.0):
+    
+    #
+    # Try to find a an integral rate
+    #
+    for r in numpy.arange(target-100,target*2.5,5.0):
         decim = float(brate)/float(r)
         if (decim == float(int(decim))):
             return r
