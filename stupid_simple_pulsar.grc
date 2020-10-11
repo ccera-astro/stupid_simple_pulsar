@@ -5015,6 +5015,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
         d["spectrum"] = list(numpy.multiply(numpy.log10(rfi_poller),10.0))
         d["time"] = ltime
         d["frozen_agc"] = list(frozen_agc)
+        d["composite_mask"] = list(numpy.multiply(frozen_agc,list(retmask)))
         mask_log_list.append(d)
         fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
         fp = open(fn, "w")
@@ -5053,6 +5054,7 @@ def process_agc(av):
         return ret
     else:
         return numpy.multiply(frozen_agc,mask)
+
 
 #
 # Convert to the weirdness that is the hybrid floating-point
