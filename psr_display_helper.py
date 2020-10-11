@@ -45,22 +45,9 @@ def get_profile(pacer,port,outsize):
     except:
         return ([0.0]*outsize)
     
-    ratio = int(outsize / l)
-
-    numf = 0
-    for i in range(l):
-        for j in range(ratio):
-            outp[(i*ratio)+j] = newr[i]
-            numf += 1
-
-    numneeded = outsize-numf
-    
-    for i in range((outsize-numneeded)-1,outsize):
-        outp[i] = newr[l-1]
-    y = outp[0]
-    newoutp = []
-    for i in range(outsize):
-        y = outp[i]*0.2 + y*0.80
-        newoutp.append(y)
+    x = numpy.arange(0.0,float(outsize),1.0)
+    x2 = numpy.arange(0.0,float(outsize),float(outsize)/float(l))
+    y = newr
+    newoutp = numpy.interp(x,x2,y)
     return newoutp
     
