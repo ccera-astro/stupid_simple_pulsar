@@ -88,7 +88,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
             idx += 1
         smoothed = True
 
-    
+
     rv = numpy.multiply(smoother,retmask)
     most_recent_mask = retmask
     rfi_logging_counter -= 1
@@ -109,7 +109,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
         fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
         fp = open(fn, "w")
         fp.write(json.dumps(mask_log_list,indent=4)+"\n")
-        
+
     return rv
 
 #
@@ -144,9 +144,9 @@ def process_agc(av):
     else:
         return numpy.multiply(frozen_agc,mask)
 
-       
+
 def find_rate(srate,fbsize,target):
-    
+
     brate = float(srate)/float(fbsize)
     decim = float(brate)/float(target)
 
@@ -155,7 +155,7 @@ def find_rate(srate,fbsize,target):
     #
     if (decim == float(int(decim))):
         return target
-    
+
     #
     # Try to find a an integral rate
     #
@@ -163,7 +163,7 @@ def find_rate(srate,fbsize,target):
         decim = float(brate)/float(r)
         if (decim == float(int(decim))):
             return r
-            
+
 
 #
 # Convert to the weirdness that is the hybrid floating-point
@@ -228,9 +228,9 @@ def convert_sigproct(v):
 def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first):
     global hdr_countdown
     global hdr_done
-    
+
     if (first == None):
-		return None
+        return None
 
     fp = open(outfile, "wb")
     #
@@ -303,7 +303,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     #
     write_element_name(fp, "za_start")
     write_element_data(fp, 0.0, 'd')
-  
+
     #--
     #
     write_element_name(fp, "tstart")
@@ -313,12 +313,12 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     #
     write_element_name(fp, "foff")
     write_element_data(fp, f_off, 'd')
-    
+
     #--
     #
     write_element_name(fp, "fch1")
     write_element_data(fp, high_freq, 'd')
- 
+
     #--
     #
     write_element_name(fp, "nchans")
@@ -328,12 +328,12 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     #
     write_element_name(fp, "data_type")
     write_element_data(fp, 1, 'i')
- 
+
     #--
     #
     write_element_name(fp, "ibeam")
     write_element_data(fp, 1, 'i')
- 
+
     #--
     #
     write_element_name(fp, "nbits")
@@ -371,6 +371,6 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
 
     #--
     write_element_name(fp, etx)
-    
+
     fp.close
     return True

@@ -32,7 +32,7 @@ def cur_sidereal(longitude):
     hours=int(tokens[0])
     minutes=int(tokens[1])
     seconds=int(float(tokens[2]))
-    
+
     sidt = "%02d,%02d,%02d" % (hours, minutes, seconds)
     return (sidt)
 
@@ -51,22 +51,22 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         )
         # if an attribute with the same name as a parameter is found,
         # a callback is registered (properties work, too).
-        
+
         self.set_output_multiple(fbsize)
         self.maxdelay = round(smear * float(fbrate))
         self.maxdelay = int(self.maxdelay)
         self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
-        
+
         #
         # Needed in a few places
         #
         self.flen = fbsize
-        
+
         #
         # The pulsar period
         #
         self.p0 = period
-        
+
         #
         # The derived single-period pulse profile with various shifts
         #
@@ -89,7 +89,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.profiles = np.zeros((len(self.shifts),tbins))
         self.pcounts = np.zeros((len(self.shifts),tbins))
         self.nprofiles = len(self.profiles)
-        
+
         #
         #
         # How much time is in each bin?
@@ -101,53 +101,53 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         for shift in self.shifts:
             self.tbint.append((self.p0*(1.0+shift))/float(tbins))
             self.periods.append((self.p0*(1.0+shift)))
-        
+
         #
         # The profile length
-        #   
+        #
         self.plen = int(tbins)
-        
+
         #
         # Sample period
         #
         self.sper = 1.0/float(fbrate)
-        
+
         #
         # Mission Elapsed Time
         # This is moved along at every time samples arrival--incremented
         #   by 'self.sper'
         #
         self.MET = 0.0
-        
+
         #
         # Open the output file
         #
         self.fname = filename
         self.sequence = 0
-        
+
         #
         # The logging interval
         #
         self.INTERVAL = int(fbrate*interval)
         self.logcount = self.INTERVAL
         self.jsonlets = []
-        
+
         self.bw = bw
         self.freq = freq
         self.longitude = longitude
-        
+
         self.randlist = []
         for i in range(0,100000):
             self.randlist.append(random.randint(0,1))
         self.nrand = len(self.randlist)
         self.randcnt = 0
-        
+
         self.subint = subint
         self.subtimer = self.subint
         self.subseq = 0
-        
+
         self.first_sample = None
-    
+
     def get_profile(self):
         mid = int(self.nprofiles/2)
         if (0 in self.pcounts[mid]):
@@ -183,18 +183,18 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.maxdelay -= 1
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
-            
-            
+
+
             #
             # Outval now contains a single de-dispersed power sample
             #
-            
+
             #
             # Increment Mission Elapsed Time
             #  sper is the sample period coming into the folder
             #
             self.MET += self.sper
-            
+
             #
             # Determine where the current sample is to be placed in the
             #  time/phase bin buffer.
@@ -210,9 +210,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #
                 # From sigProcPy3
                 # abs(((int)(nbins*tj*(1+accel*(tj-tobs)/(2*c))/period + 0.5)))%nbins;
-                
+
                 z = (float(self.plen)*self.MET/self.periods[x]) + 0.5
-                    
+
                 #
                 # Convert that to an int, then reduce modulo number
                 #  of time/phase bins in a single estimate
@@ -225,18 +225,18 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #   the pulse profile.
                 #
                 where = int(z) % int(self.plen)
-                
+
                 #
                 # Update appropriate time/phase bin
                 #
                 self.profiles[x][where] += outval
                 self.pcounts[x][where] += 1.0
-            
+
             #
             # Decrement the log counter
             #
             self.logcount -= 1
-            
+
             #
             # If time to log, the output is the reduced-by-counts
             #  value of the profile.
@@ -277,7 +277,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 fp = open(self.fname, "w")
                 fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
                 fp.close()
-            
-            
+
+
         return len(q)
 
