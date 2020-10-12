@@ -41,7 +41,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
     def __init__(self, fbsize=16,smear=10.0,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
-        longitude=-75.984):  # only default arguments here
+        longitude=-75.984,subint=0):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -141,6 +141,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             self.randlist.append(random.randint(0,1))
         self.nrand = len(self.randlist)
         self.randcnt = 0
+        
+        self.subint = subint
+        self.subtimer = self.subint
+        self.subseq = 0
+        
+        self.first_sample = None
     
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -151,10 +157,15 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             l.append(float(v))
         return l
 
+    def first_sample_time(self):
+        return self.first_sample
+
     def work(self, input_items, output_items):
         """Do dedispersion/folding"""
         q = input_items[0]
         l = len(q)
+        if (self.first_sample == None):
+            self.first_sample = time.time()
         for i in range(int(l/self.flen)):
             bndx = i*self.flen
             #
@@ -200,7 +211,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 # From sigProcPy3
                 # abs(((int)(nbins*tj*(1+accel*(tj-tobs)/(2*c))/period + 0.5)))%nbins;
                 
-                z = (float(self.plen)*self.MET/periods[x]) + 0.5
+                z = (float(self.plen)*self.MET/self.periods[x]) + 0.5
                     
                 #
                 # Convert that to an int, then reduce modulo number
@@ -255,6 +266,14 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 d["profiles"] = profiles
                 self.jsonlets.append(d)
                 self.logcount = self.INTERVAL
+                if (self.subint > 0):
+                    self.subtimer -= 1
+                    if (self.subtimer <= 0):
+                        self.subtimer = self.subint
+                        d["subseq"] = self.subseq
+                        for x in range(self.nprofiles):
+                            self.profiles[x] = np.zeros(len(self.profiles[x]))
+                            self.pcounts[x] = np.zeros(len(self.profiles[x]))
                 fp = open(self.fname, "w")
                 fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
                 fp.close()

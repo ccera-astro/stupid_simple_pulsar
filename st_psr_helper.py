@@ -146,7 +146,7 @@ def process_agc(av):
 
        
 def find_rate(srate,fbsize,target):
-	
+    
     brate = float(srate)/float(fbsize)
     decim = float(brate)/float(target)
 
@@ -184,9 +184,55 @@ def convert_sigproct(v):
 #
 # This seems to be broken for Python3
 #
-def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize):
+#
+# This will cause a header block to be prepended to the output file
+#
+# Thanks to Guillermo Gancio (ganciogm@gmail.com) for the inspiration
+#   and much of the code
+#
+# This seems to be broken for Python3
+#
+import time
+import struct
+import sys
 
-    fp = open(outfile, "w")
+def write_element_name(fp,elem):
+    fp.write(struct.pack('i',len(elem)))
+    if (sys.version_info[0] >= 3):
+        fp.write(bytes(elem, encoding='utf8'))
+    else:
+        fp.write(elem)
+
+def write_element_data(fp,elem,t):
+    if (t != None and t != "str"):
+        fp.write(struct.pack(t, elem))
+    else:
+        fp.write(struct.pack('i', len(elem)))
+        if (sys.version_info[0] >= 3):
+            fp.write(bytes(elem, encoding='utf8'))
+        else:
+            fp.write(elem)
+
+#
+# Convert to the weirdness that is the hybrid floating-point
+#  time format used by SIGPROC
+#
+def convert_sigproct(v):
+    itime = int(v*3600.0)
+    hours = itime/3600
+    minutes = (itime-(hours*3600))/60
+    seconds = itime - (hours*3600) - (minutes*60)
+    timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
+    return(float(timestr))
+
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first):
+    global hdr_countdown
+    global hdr_done
+    
+    if (first == None):
+		return None
+
+    fp = open(outfile, "wb")
     #
     # Time for one sample, in sec
     #
@@ -221,128 +267,110 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
 
     #
     # MJD
+    # Super approximate!
     #
-    t_start = (time.time() / 86400.0) + 40587.0
+    t_start = (first / 86400.0) + 40587.0
 
     #
     # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
     #
     stx="HEADER_START"
     etx="HEADER_END"
-    fp.write(struct.pack('i', len(stx))+stx)
-    fp.flush()
-    #--
-    aux="rawdatafile"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    fp.write(struct.pack('i', len(outfile))+outfile)
-    #--
-    aux="src_raj"
-    aux=struct.pack('i', len(aux))+aux
-    source_ra = convert_sigproct(source_ra)
-    fp.write(aux)
-    aux=struct.pack('d', source_ra)
-    fp.write(aux)
-    fp.flush()
+    write_element_name(fp,stx)
 
     #--
-    aux="src_dej"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
+    #
+    write_element_name(fp,"rawdatafile")
+    write_element_data(fp, outfile, "str")
+
+    #--
+    #
+    write_element_name(fp, "src_raj")
+    source_ra = convert_sigproct(source_ra)
+    write_element_data (fp, source_ra, 'd')
+
+    #--
+    #
+    write_element_name(fp, "src_dej")
     source_dec= convert_sigproct(source_dec)
-    aux=struct.pack('d', source_dec)
-    fp.write(aux)
+    write_element_data(fp, source_dec, 'd')
     #--
-    aux="az_start"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', 0.0)
-    fp.write(aux)
+    #
+    write_element_name(fp, "az_start")
+    write_element_data(fp, 0.0, 'd')
+
     #--
-    aux="za_start"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', 0.0)
-    fp.write(aux)
+    #
+    write_element_name(fp, "za_start")
+    write_element_data(fp, 0.0, 'd')
+  
     #--
-    aux="tstart"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', float(t_start))
-    fp.write(aux)
+    #
+    write_element_name(fp, "tstart")
+    write_element_data(fp, float(t_start), 'd')
+
     #--
-    aux="foff"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', f_off)
-    fp.write(aux)
+    #
+    write_element_name(fp, "foff")
+    write_element_data(fp, f_off, 'd')
+    
     #--
-    aux="fch1"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', high_freq)
-    fp.write(aux)
+    #
+    write_element_name(fp, "fch1")
+    write_element_data(fp, high_freq, 'd')
+ 
     #--
-    aux="nchans"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', sub_bands)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nchans")
+    write_element_data(fp, sub_bands, 'i')
+
     #--
-    aux="data_type"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "data_type")
+    write_element_data(fp, 1, 'i')
+ 
     #--
-    aux="ibeam"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "ibeam")
+    write_element_data(fp, 1, 'i')
+ 
     #--
-    aux="nbits"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 8)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nbits")
+    write_element_data(fp, 8, 'i')
+
     #--
-    aux="tsamp"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', tsamp)
-    fp.write(aux)
+    #
+    write_element_name(fp, "tsamp")
+    write_element_data(fp, tsamp, 'd')
+
     #--
-    aux="nbeams"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nbeams")
+    write_element_data(fp, 1, 'i')
+
     #--
-    aux="nifs"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nifs")
+    write_element_data(fp, 1, 'i')
+
     #--
-    aux="source_name"
-    fp.write(struct.pack('i', len(aux))+aux)
-    fp.write(struct.pack('i', len(source_name))+source_name)
+    #
+    write_element_name(fp, "source_name")
+    write_element_data(fp, source_name, "str")
+
     #--
-    aux="machine_id"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 20)
-    fp.write(aux)
+    #
+    write_element_name(fp, "machine_id")
+    write_element_data(fp, 20, 'i')
+
     #--
-    aux="telescope_id"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 20)
-    fp.write(aux)
+    #
+    write_element_name(fp, "telescope_id")
+    write_element_data(fp, 20, 'i')
+
     #--
-    fp.write(struct.pack('i', len(etx)))
-    fp.write(etx)
-    fp.flush()
+    write_element_name(fp, etx)
+    
     fp.close
     return True

@@ -313,6 +313,49 @@ filterbank output file</value>
     </param>
   </block>
   <block>
+    <key>variable_function_probe</key>
+    <param>
+      <key>block_id</key>
+      <value>Stupid_folder</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>function_args</key>
+      <value></value>
+    </param>
+    <param>
+      <key>function_name</key>
+      <value>first_sample_time</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1392, 752)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>first_poller</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>poll_rate</key>
+      <value>1.0</value>
+    </param>
+  </block>
+  <block>
     <key>variable</key>
     <param>
       <key>comment</key>
@@ -364,6 +407,60 @@ filterbank output file</value>
     <param>
       <key>value</key>
       <value>(skyf+(samp_rate/2.0))/1.0e6</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1600, 764)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>hdr_sts</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>st_psr_helper.build_header_info(hfilename,pname,ra,dec,skyf,samp_rate,real_fbrate,fbsize,first_poller)</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1680, 764)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>hfilename</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>fbfilename.replace("int8","fil")</value>
     </param>
   </block>
   <block>
@@ -691,7 +788,7 @@ effects</value>
     </param>
     <param>
       <key>_io_cache</key>
-      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '10.0'), ('period', '0.71452'), ('filename', "'/dev/null'"), ('fbrate', '2500.0'), ('tbins', '250'), ('interval', '30'), ('tppms', "'0.0'"), ('freq', '408000000.0'), ('bw', '2560000.0'), ('longitude', '-75.984')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['bw', 'freq', 'longitude'])</value>
+      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '10.0'), ('period', '0.71452'), ('filename', "'/dev/null'"), ('fbrate', '2500.0'), ('tbins', '250'), ('interval', '30'), ('tppms', "'0.0'"), ('freq', '408000000.0'), ('bw', '2560000.0'), ('longitude', '-75.984'), ('subint', '0')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['bw', 'freq', 'longitude', 'subint'])</value>
     </param>
     <param>
       <key>bw</key>
@@ -742,7 +839,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
     def __init__(self, fbsize=16,smear=10.0,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
-        longitude=-75.984):  # only default arguments here
+        longitude=-75.984,subint=0):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -842,6 +939,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             self.randlist.append(random.randint(0,1))
         self.nrand = len(self.randlist)
         self.randcnt = 0
+        
+        self.subint = subint
+        self.subtimer = self.subint
+        self.subseq = 0
+        
+        self.first_sample = None
     
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -852,10 +955,15 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             l.append(float(v))
         return l
 
+    def first_sample_time(self):
+        return self.first_sample
+
     def work(self, input_items, output_items):
         """Do dedispersion/folding"""
         q = input_items[0]
         l = len(q)
+        if (self.first_sample == None):
+            self.first_sample = time.time()
         for i in range(int(l/self.flen)):
             bndx = i*self.flen
             #
@@ -901,7 +1009,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 # From sigProcPy3
                 # abs(((int)(nbins*tj*(1+accel*(tj-tobs)/(2*c))/period + 0.5)))%nbins;
                 
-                z = (float(self.plen)*self.MET/periods[x]) + 0.5
+                z = (float(self.plen)*self.MET/self.periods[x]) + 0.5
                     
                 #
                 # Convert that to an int, then reduce modulo number
@@ -956,6 +1064,14 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 d["profiles"] = profiles
                 self.jsonlets.append(d)
                 self.logcount = self.INTERVAL
+                if (self.subint &gt; 0):
+                    self.subtimer -= 1
+                    if (self.subtimer &lt;= 0):
+                        self.subtimer = self.subint
+                        d["subseq"] = self.subseq
+                        for x in range(self.nprofiles):
+                            self.profiles[x] = np.zeros(len(self.profiles[x]))
+                            self.pcounts[x] = np.zeros(len(self.profiles[x]))
                 fp = open(self.fname, "w")
                 fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
                 fp.close()
@@ -1017,6 +1133,10 @@ Generates a valid JSON file</value>
     <param>
       <key>smear</key>
       <value>smear</value>
+    </param>
+    <param>
+      <key>subint</key>
+      <value>subint</value>
     </param>
     <param>
       <key>tbins</key>
@@ -2155,7 +2275,7 @@ to --obstime</value>
     </param>
     <param>
       <key>value</key>
-      <value>3000</value>
+      <value>2500</value>
     </param>
   </block>
   <block>
@@ -5062,7 +5182,7 @@ def process_agc(av):
 
        
 def find_rate(srate,fbsize,target):
-	
+    
     brate = float(srate)/float(fbsize)
     decim = float(brate)/float(target)
 
@@ -5100,9 +5220,55 @@ def convert_sigproct(v):
 #
 # This seems to be broken for Python3
 #
-def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize):
+#
+# This will cause a header block to be prepended to the output file
+#
+# Thanks to Guillermo Gancio (ganciogm@gmail.com) for the inspiration
+#   and much of the code
+#
+# This seems to be broken for Python3
+#
+import time
+import struct
+import sys
 
-    fp = open(outfile, "w")
+def write_element_name(fp,elem):
+    fp.write(struct.pack('i',len(elem)))
+    if (sys.version_info[0] &gt;= 3):
+        fp.write(bytes(elem, encoding='utf8'))
+    else:
+        fp.write(elem)
+
+def write_element_data(fp,elem,t):
+    if (t != None and t != "str"):
+        fp.write(struct.pack(t, elem))
+    else:
+        fp.write(struct.pack('i', len(elem)))
+        if (sys.version_info[0] &gt;= 3):
+            fp.write(bytes(elem, encoding='utf8'))
+        else:
+            fp.write(elem)
+
+#
+# Convert to the weirdness that is the hybrid floating-point
+#  time format used by SIGPROC
+#
+def convert_sigproct(v):
+    itime = int(v*3600.0)
+    hours = itime/3600
+    minutes = (itime-(hours*3600))/60
+    seconds = itime - (hours*3600) - (minutes*60)
+    timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
+    return(float(timestr))
+
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first):
+    global hdr_countdown
+    global hdr_done
+    
+    if (first == None):
+		return None
+
+    fp = open(outfile, "wb")
     #
     # Time for one sample, in sec
     #
@@ -5137,129 +5303,111 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
 
     #
     # MJD
+    # Super approximate!
     #
-    t_start = (time.time() / 86400.0) + 40587.0
+    t_start = (first / 86400.0) + 40587.0
 
     #
     # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
     #
     stx="HEADER_START"
     etx="HEADER_END"
-    fp.write(struct.pack('i', len(stx))+stx)
-    fp.flush()
-    #--
-    aux="rawdatafile"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    fp.write(struct.pack('i', len(outfile))+outfile)
-    #--
-    aux="src_raj"
-    aux=struct.pack('i', len(aux))+aux
-    source_ra = convert_sigproct(source_ra)
-    fp.write(aux)
-    aux=struct.pack('d', source_ra)
-    fp.write(aux)
-    fp.flush()
+    write_element_name(fp,stx)
 
     #--
-    aux="src_dej"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
+    #
+    write_element_name(fp,"rawdatafile")
+    write_element_data(fp, outfile, "str")
+
+    #--
+    #
+    write_element_name(fp, "src_raj")
+    source_ra = convert_sigproct(source_ra)
+    write_element_data (fp, source_ra, 'd')
+
+    #--
+    #
+    write_element_name(fp, "src_dej")
     source_dec= convert_sigproct(source_dec)
-    aux=struct.pack('d', source_dec)
-    fp.write(aux)
+    write_element_data(fp, source_dec, 'd')
     #--
-    aux="az_start"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', 0.0)
-    fp.write(aux)
+    #
+    write_element_name(fp, "az_start")
+    write_element_data(fp, 0.0, 'd')
+
     #--
-    aux="za_start"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', 0.0)
-    fp.write(aux)
+    #
+    write_element_name(fp, "za_start")
+    write_element_data(fp, 0.0, 'd')
+  
     #--
-    aux="tstart"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', float(t_start))
-    fp.write(aux)
+    #
+    write_element_name(fp, "tstart")
+    write_element_data(fp, float(t_start), 'd')
+
     #--
-    aux="foff"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', f_off)
-    fp.write(aux)
+    #
+    write_element_name(fp, "foff")
+    write_element_data(fp, f_off, 'd')
+    
     #--
-    aux="fch1"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', high_freq)
-    fp.write(aux)
+    #
+    write_element_name(fp, "fch1")
+    write_element_data(fp, high_freq, 'd')
+ 
     #--
-    aux="nchans"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', sub_bands)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nchans")
+    write_element_data(fp, sub_bands, 'i')
+
     #--
-    aux="data_type"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "data_type")
+    write_element_data(fp, 1, 'i')
+ 
     #--
-    aux="ibeam"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "ibeam")
+    write_element_data(fp, 1, 'i')
+ 
     #--
-    aux="nbits"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 8)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nbits")
+    write_element_data(fp, 8, 'i')
+
     #--
-    aux="tsamp"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('d', tsamp)
-    fp.write(aux)
+    #
+    write_element_name(fp, "tsamp")
+    write_element_data(fp, tsamp, 'd')
+
     #--
-    aux="nbeams"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nbeams")
+    write_element_data(fp, 1, 'i')
+
     #--
-    aux="nifs"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 1)
-    fp.write(aux)
+    #
+    write_element_name(fp, "nifs")
+    write_element_data(fp, 1, 'i')
+
     #--
-    aux="source_name"
-    fp.write(struct.pack('i', len(aux))+aux)
-    fp.write(struct.pack('i', len(source_name))+source_name)
+    #
+    write_element_name(fp, "source_name")
+    write_element_data(fp, source_name, "str")
+
     #--
-    aux="machine_id"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 20)
-    fp.write(aux)
+    #
+    write_element_name(fp, "machine_id")
+    write_element_data(fp, 20, 'i')
+
     #--
-    aux="telescope_id"
-    aux=struct.pack('i', len(aux))+aux
-    fp.write(aux)
-    aux=struct.pack('i', 20)
-    fp.write(aux)
+    #
+    write_element_name(fp, "telescope_id")
+    write_element_data(fp, 20, 'i')
+
     #--
-    fp.write(struct.pack('i', len(etx)))
-    fp.write(etx)
-    fp.flush()
+    write_element_name(fp, etx)
+    
     fp.close
     return True
 </value>
@@ -5330,6 +5478,53 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     <param>
       <key>value</key>
       <value>"A:0"</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1000, 1160)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>subint</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Sub integration interval</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>intx</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>0</value>
     </param>
   </block>
   <block>
