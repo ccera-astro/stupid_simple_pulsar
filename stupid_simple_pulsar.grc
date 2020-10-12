@@ -714,6 +714,7 @@ import json
 import atexit
 import ephem
 import math
+import random
 
 def cur_sidereal(longitude):
     longstr = "%02d" % int(longitude)
@@ -732,6 +733,7 @@ def cur_sidereal(longitude):
     hours=int(tokens[0])
     minutes=int(tokens[1])
     seconds=int(float(tokens[2]))
+    
     sidt = "%02d,%02d,%02d" % (hours, minutes, seconds)
     return (sidt)
 
@@ -796,8 +798,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #   pulse period
         #
         self.tbint = []
+        self.periods = []
         for shift in self.shifts:
             self.tbint.append((self.p0*(1.0+shift))/float(tbins))
+            self.periods.append((self.p0*(1.0+shift)))
         
         #
         # The profile length
@@ -832,6 +836,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.bw = bw
         self.freq = freq
         self.longitude = longitude
+        
+        self.randlist = []
+        for i in range(0,100000):
+            self.randlist.append(random.randint(0,1))
+        self.nrand = len(self.randlist)
+        self.randcnt = 0
     
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -871,8 +881,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             
             #
             # Increment Mission Elapsed Time
+            #  sper is the sample period coming into the folder
             #
             self.MET += self.sper
+            
             #
             # Determine where the current sample is to be placed in the
             #  time/phase bin buffer.
@@ -886,8 +898,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #   time/phase bins for ths particular estimate of
                 #   P0.
                 #
-                where = round(self.MET/self.tbint[x])
+                # From sigProcPy3
+                # abs(((int)(nbins*tj*(1+accel*(tj-tobs)/(2*c))/period + 0.5)))%nbins;
                 
+                z = (float(self.plen)*self.MET/periods[x]) + 0.5
+                    
                 #
                 # Convert that to an int, then reduce modulo number
                 #  of time/phase bins in a single estimate
@@ -899,7 +914,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #   extend that to 216 to get higher-resolution on
                 #   the pulse profile.
                 #
-                where = int(where) % int(self.plen)
+                where = int(z) % int(self.plen)
                 
                 #
                 # Update appropriate time/phase bin
