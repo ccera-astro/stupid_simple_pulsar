@@ -275,7 +275,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     if (self.subtimer <= 0):
                         self.subtimer = self.subint
                         for x in range(self.nprofiles):
-                            self.profiles[x] = np.array(np.divide(self.profiles[x],self.pcounts[x]))
+                            t = np.divide(self.profiles[x],self.pcounts[x])
+                            t = np.multiply(t,0.3)
+                            self.profiles[x] = np.array(t)
                             self.pcounts[x] = np.array([1.0]*self.plen)
                         self.subseq += 1
                 fp = open(self.fname, "w")
