@@ -128,8 +128,10 @@ for v in range(l):
 #
 # Plot normalized profile against "phase"
 #
-plt.plot(x, numpy.divide(newq, max(best["profile"])))
+lbl="Fc:%dM/Bw:%-.2fM/Tsamp:%-.2fus" % (profset["freq"]/1.0e6, profset["bw"]/1.0e6, profset["sampletime"]*1.0e6)
+plt.plot(x, numpy.divide(newq, max(best["profile"])), label=lbl)
 plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
+plt.legend(loc='lower left', fontsize='small')
 
 maxratdb = math.log(maxratio-1.0)/math.log(10.0)
 maxratdb *= 10.0

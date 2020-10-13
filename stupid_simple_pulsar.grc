@@ -541,7 +541,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>fbfilename.replace("int8",".json")</value>
+      <value>fbfilename.replace("int8","json")</value>
     </param>
   </block>
   <block>
