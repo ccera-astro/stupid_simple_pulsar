@@ -374,3 +374,31 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
 
     fp.close
     return True
+
+import os
+def do_exit(hfile, fbfile):
+    try:
+        fp = open(hfile, "ab")
+        initial_size = os.stat(hfile).st_size
+    except:
+        return
+    try:
+        ifp = open(fbfile, "rb")
+        fb_size = os.stat(fbfile).st_size
+    except:
+        return
+    while True:
+        inbuf = ifp.read(16384)
+        if len(inbuf) <= 0:
+            break
+        fp.write(inbuf)
+    fp.close()
+    ifp.close()
+    new_size = os.stat(hfile).st_size
+    
+    #
+    # OK to remove unheadereed .int8 file if the concatenation succeeded
+    #
+    if (new_size == initial_size+fb_size):
+		os.remove(fbfile)
+    return

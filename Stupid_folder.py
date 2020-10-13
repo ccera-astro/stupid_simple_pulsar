@@ -210,6 +210,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #
                 # From sigProcPy3
                 # abs(((int)(nbins*tj*(1+accel*(tj-tobs)/(2*c))/period + 0.5)))%nbins;
+                #
+                # We eliminate the central correction for binary pulsars
+                #
 
                 z = (float(self.plen)*self.MET/self.periods[x]) + 0.5
 
@@ -255,6 +258,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
                 d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
                 d["sequence"] = self.sequence
+                d["subseq"] = self.subseq
                 self.sequence += 1
                 profiles = []
                 for x in range(self.nprofiles):
@@ -270,10 +274,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     self.subtimer -= 1
                     if (self.subtimer <= 0):
                         self.subtimer = self.subint
-                        d["subseq"] = self.subseq
                         for x in range(self.nprofiles):
-                            self.profiles[x] = np.zeros(len(self.profiles[x]))
-                            self.pcounts[x] = np.zeros(len(self.profiles[x]))
+                            self.profiles[x] = np.array(np.divide(self.profiles[x],self.pcounts[x]))
+                            self.pcounts[x] = np.array([1.0]*self.plen)
+                        self.subseq += 1
                 fp = open(self.fname, "w")
                 fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
                 fp.close()

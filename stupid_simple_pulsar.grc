@@ -234,6 +234,33 @@ and dynamically</value>
     <key>variable</key>
     <param>
       <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1600, 900)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>exit_register</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>atexit.register(st_psr_helper.do_exit, hfilename, fbfilename)</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
       <value>Filename construction for
 filterbank output file</value>
     </param>
@@ -255,7 +282,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>prefix+"/psr-%s-%-.1f-%-.1f-%-8.2f-%d-%d.int8" % (pname, skyf/1.0e6, samp_rate/1.0e6, mjd, fbsize,real_fbrate)</value>
+      <value>prefix+"/psr-%s-%-.1f-%-.1f-%-9.3f-%d-%d.int8" % (pname, skyf/1.0e6, samp_rate/1.0e6, mjd, fbsize,real_fbrate)</value>
     </param>
   </block>
   <block>
@@ -421,7 +448,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1600, 764)</value>
+      <value>(1512, 900)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -448,7 +475,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1680, 764)</value>
+      <value>(1624, 764)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -488,6 +515,33 @@ filterbank output file</value>
     <param>
       <key>value</key>
       <value>max([math.pow(2.0,round(math.log(smear/(width/8.0))/math.log(2.0))), 8])</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1624, 836)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>jsfilename</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>fbfilename.replace("int8",".json")</value>
     </param>
   </block>
   <block>
@@ -1008,6 +1062,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #
                 # From sigProcPy3
                 # abs(((int)(nbins*tj*(1+accel*(tj-tobs)/(2*c))/period + 0.5)))%nbins;
+                #
+                # We eliminate the central correction for binary pulsars
+                #
 
                 z = (float(self.plen)*self.MET/self.periods[x]) + 0.5
 
@@ -1053,6 +1110,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
                 d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
                 d["sequence"] = self.sequence
+                d["subseq"] = self.subseq
                 self.sequence += 1
                 profiles = []
                 for x in range(self.nprofiles):
@@ -1068,10 +1126,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     self.subtimer -= 1
                     if (self.subtimer &lt;= 0):
                         self.subtimer = self.subint
-                        d["subseq"] = self.subseq
                         for x in range(self.nprofiles):
-                            self.profiles[x] = np.zeros(len(self.profiles[x]))
-                            self.pcounts[x] = np.zeros(len(self.profiles[x]))
+                            self.profiles[x] = np.array(np.divide(self.profiles[x],self.pcounts[x]))
+                            self.pcounts[x] = np.array([1.0]*self.plen)
+                        self.subseq += 1
                 fp = open(self.fname, "w")
                 fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
                 fp.close()
@@ -1100,7 +1158,7 @@ Generates a valid JSON file</value>
     </param>
     <param>
       <key>filename</key>
-      <value>prefix+"/"+outfile</value>
+      <value>jsfilename</value>
     </param>
     <param>
       <key>freq</key>
@@ -1415,7 +1473,7 @@ spectrum--likely for historical reasons.</value>
     </param>
     <param>
       <key>unbuffered</key>
-      <value>False</value>
+      <value>True</value>
     </param>
     <param>
       <key>vlen</key>
@@ -2153,7 +2211,7 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(160, 984)</value>
+      <value>(24, 984)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2569,6 +2627,37 @@ to --obstime</value>
     <param>
       <key>id</key>
       <value>import_0_1</value>
+    </param>
+    <param>
+      <key>import</key>
+      <value>import atexit</value>
+    </param>
+  </block>
+  <block>
+    <key>import</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(688, 836)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>import_0_1_0</value>
     </param>
     <param>
       <key>import</key>
@@ -4333,53 +4422,6 @@ YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(16, 984)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>outfile</value>
-    </param>
-    <param>
-      <key>label</key>
-      <value>Output Filename</value>
-    </param>
-    <param>
-      <key>short_id</key>
-      <value></value>
-    </param>
-    <param>
-      <key>hide</key>
-      <value>none</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>string</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>"output.json"</value>
-    </param>
-  </block>
-  <block>
-    <key>parameter</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
       <value>(16, 1184)</value>
     </param>
     <param>
@@ -4427,7 +4469,7 @@ YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(464, 976)</value>
+      <value>(304, 976)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -5410,6 +5452,34 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
 
     fp.close
     return True
+
+import os
+def do_exit(hfile, fbfile):
+    try:
+        fp = open(hfile, "ab")
+        initial_size = os.stat(hfile).st_size
+    except:
+        return
+    try:
+        ifp = open(fbfile, "rb")
+        fb_size = os.stat(fbfile).st_size
+    except:
+        return
+    while True:
+        inbuf = ifp.read(16384)
+        if len(inbuf) &lt;= 0:
+            break
+        fp.write(inbuf)
+    fp.close()
+    ifp.close()
+    new_size = os.stat(hfile).st_size
+    
+    #
+    # OK to remove unheadereed .int8 file if the concatenation succeeded
+    #
+    if (new_size == initial_size+fb_size):
+		os.remove(fbfile)
+    return
 </value>
     </param>
     <param>
@@ -5449,7 +5519,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(296, 976)</value>
+      <value>(152, 976)</value>
     </param>
     <param>
       <key>_rotation</key>
