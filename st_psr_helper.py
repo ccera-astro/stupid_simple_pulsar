@@ -395,10 +395,10 @@ def do_exit(hfile, fbfile):
     fp.close()
     ifp.close()
     new_size = os.stat(hfile).st_size
-    
+
     #
     # OK to remove unheadereed .int8 file if the concatenation succeeded
     #
     if (new_size == initial_size+fb_size):
-		os.remove(fbfile)
+        os.remove(fbfile)
     return
