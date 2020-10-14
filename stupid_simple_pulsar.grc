@@ -969,7 +969,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # This is moved along at every time samples arrival--incremented
         #   by 'self.sper'
         #
-        self.MET = 0.0
+        self.MET = 0
 
         #
         # Open the output file
@@ -1045,7 +1045,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             # Increment Mission Elapsed Time
             #  sper is the sample period coming into the folder
             #
-            self.MET += self.sper
+            self.MET += 1
 
             #
             # Determine where the current sample is to be placed in the
@@ -1066,7 +1066,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 # We eliminate the central correction for binary pulsars
                 #
 
-                z = (float(self.plen)*self.MET/self.periods[x]) + 0.5
+                z = (float(self.plen)*(float(self.MET)*self.sper)/self.periods[x]) + 0.5
 
                 #
                 # Convert that to an int, then reduce modulo number
