@@ -102,7 +102,7 @@ Other parameters:
 --srate     The sampl rate, in sps.  Engineering notation is supported
 --width     The pulsar width, in seconds
 --debug     Enable a special debug mode
---sky       Set sky frequency, if different from --freq
+--sky       Set sky frequency, if different from --freq (in Hz)
 --fine      Enables fine-scale pulsar period trials
 --antenna   Sets the antenna (usually UHD devices only)
 --refclock  Sets the reference clock to be used

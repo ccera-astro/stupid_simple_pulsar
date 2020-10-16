@@ -242,7 +242,7 @@ and dynamically</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1600, 900)</value>
+      <value>(1616, 1004)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -254,7 +254,7 @@ and dynamically</value>
     </param>
     <param>
       <key>value</key>
-      <value>atexit.register(st_psr_helper.do_exit, hfilename, fbfilename)</value>
+      <value>atexit.register(st_psr_helper.do_exit, hfilename, fbfilename if flout == 0 else fltname)</value>
     </param>
   </block>
   <block>
@@ -413,6 +413,34 @@ filterbank output file</value>
     <key>variable</key>
     <param>
       <key>comment</key>
+      <value>Filename construction for
+filterbank output file</value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1616, 740)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>fltname</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>prefix+"/psr-%s-%-.1f-%-.1f-%-9.3f-%d-%d.f32" % (pname, skyf/1.0e6, samp_rate/1.0e6, mjd, fbsize,real_fbrate)</value>
+    </param>
+  </block>
+  <block>
+    <key>variable</key>
+    <param>
+      <key>comment</key>
       <value></value>
     </param>
     <param>
@@ -448,7 +476,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1512, 900)</value>
+      <value>(1456, 980)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -460,7 +488,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>st_psr_helper.build_header_info(hfilename,pname,ra,dec,skyf,samp_rate,real_fbrate,fbsize,first_poller)</value>
+      <value>st_psr_helper.build_header_info(hfilename,pname,ra,dec,skyf,samp_rate,real_fbrate,fbsize,first_poller,flout)</value>
     </param>
   </block>
   <block>
@@ -475,7 +503,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1624, 764)</value>
+      <value>(1632, 852)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -529,7 +557,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1624, 836)</value>
+      <value>(1624, 916)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1455,7 +1483,7 @@ spectrum--likely for historical reasons.</value>
     </param>
     <param>
       <key>file</key>
-      <value>fbfilename</value>
+      <value>fbfilename if flout == 0 else "/dev/null"</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -1472,6 +1500,57 @@ spectrum--likely for historical reasons.</value>
     <param>
       <key>type</key>
       <value>byte</value>
+    </param>
+    <param>
+      <key>unbuffered</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_file_sink</key>
+    <param>
+      <key>append</key>
+      <value>False</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>file</key>
+      <value>"/dev/null" if flout == 0 else fltname</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1296, 564)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_file_sink_1</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
     </param>
     <param>
       <key>unbuffered</key>
@@ -2307,7 +2386,7 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(568, 1280)</value>
+      <value>(504, 1272)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2464,6 +2543,53 @@ to --obstime</value>
     </param>
     <param>
       <key>_coordinate</key>
+      <value>(504, 1368)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>flout</value>
+    </param>
+    <param>
+      <key>label</key>
+      <value>Enable floating-point FB output</value>
+    </param>
+    <param>
+      <key>short_id</key>
+      <value></value>
+    </param>
+    <param>
+      <key>hide</key>
+      <value>none</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>intx</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>0</value>
+    </param>
+  </block>
+  <block>
+    <key>parameter</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
       <value>(584, 1184)</value>
     </param>
     <param>
@@ -2523,7 +2649,7 @@ to --obstime</value>
     </param>
     <param>
       <key>label</key>
-      <value>Frequency</value>
+      <value>Frequency (in Hz)</value>
     </param>
     <param>
       <key>short_id</key>
@@ -5004,7 +5130,7 @@ YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>label</key>
-      <value>Sky Frequency</value>
+      <value>Sky Frequency (in Hz)</value>
     </param>
     <param>
       <key>short_id</key>
@@ -5051,7 +5177,7 @@ YOU'VE BEEN WARNED</value>
     </param>
     <param>
       <key>label</key>
-      <value>Sample Rate</value>
+      <value>Sample Rate (in Hz)</value>
     </param>
     <param>
       <key>short_id</key>
@@ -5305,7 +5431,7 @@ def convert_sigproct(v):
     timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
     return(float(timestr))
 
-def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first):
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first,flout):
     global hdr_countdown
     global hdr_done
 
@@ -5417,7 +5543,8 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     #--
     #
     write_element_name(fp, "nbits")
-    write_element_data(fp, 8, 'i')
+    nb = 8 if flout &lt;= 0 else 32
+    write_element_data(fp, nb, 'i')
 
     #--
     #
@@ -7154,6 +7281,12 @@ def do_exit(hfile, fbfile):
     <sink_block_id>blocks_multiply_xx_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>1</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_sub_xx_0</source_block_id>
+    <sink_block_id>blocks_file_sink_1</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
   </connection>
   <connection>
     <source_block_id>blocks_sub_xx_0</source_block_id>

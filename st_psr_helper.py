@@ -225,7 +225,7 @@ def convert_sigproct(v):
     timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
     return(float(timestr))
 
-def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first):
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first,flout):
     global hdr_countdown
     global hdr_done
 
@@ -337,7 +337,8 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     #--
     #
     write_element_name(fp, "nbits")
-    write_element_data(fp, 8, 'i')
+    nb = 8 if flout <= 0 else 32
+    write_element_data(fp, nb, 'i')
 
     #--
     #
