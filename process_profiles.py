@@ -57,7 +57,7 @@ for profset in profsets:
     nprof = len(profset["profiles"])
     for profile in profset["profiles"]:
         
-        demaxed = profile["profile"]
+        demaxed =list(profile["profile"])
         idx = demaxed.index(max(demaxed))
         demaxed[idx] = numpy.mean(demaxed)
         #
