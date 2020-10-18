@@ -5587,6 +5587,19 @@ def do_exit(hfile, fbfile):
     try:
         fp = open(hfile, "ab")
         initial_size = os.stat(hfile).st_size
+        #
+        # Pad out to multiple of 4 bytes if using 32-bit/4-byte
+        #  data.
+        #
+        if ".f32" in fbfile:
+            if (int(initial_size % 4) != 0):
+                r = int(initial_size % 4)
+                v = "\0"*r
+                if sys.version_info[0] == 2:
+                    fp.write(bytes(v))
+                else:
+                    fp.write(bytes(v,encoding='utf8'))
+            
     except:
         return
     try:
