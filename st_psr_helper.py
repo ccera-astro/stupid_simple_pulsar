@@ -225,196 +225,165 @@ def convert_sigproct(v):
     timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
     return(float(timestr))
 
-def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,flout):
-    global hdr_countdown
+hdr_done = False
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,flout,first):
     global hdr_done
 
-
-    fp = open(outfile, "wb")
-    #
-    # Time for one sample, in sec
-    #
-    tsamp=1.0/fbrate
-
-    #
-    # Frequency offset between channels, in MHz
-    #
-    f_off=bw/fbsize
-    f_off /= 1.0e6
-    f_off *= -1
-
-    #
-    # Highest frequency represented in FB, in MHz
-    #
-    high_freq = freq+(bw/2.0)
-    high_freq  /= 1.0e6
-    high_freq -= (f_off/2.0)
-
-    #
-    # Lowest
-    #
-    low_freq = freq-(bw/2.0)
-    low_freq /= 1.0e6
-    low_freq += (f_off/2.0)
-
-    #
-    # Number of subbands
-    #
-    sub_bands=fbsize
+    if (first == None or first < 86400.0):
+        return None
 
 
-    #
-    # MJD
-    # Super approximate!
-    #
-    t_start = ((time.time()+1.0) / 86400.0) + 40587.0
+    if (hdr_done == False):
 
-    #
-    # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
-    #
-    stx="HEADER_START"
-    etx="HEADER_END"
-    write_element_name(fp,stx)
-
-    #--
-    #
-    write_element_name(fp,"rawdatafile")
-    write_element_data(fp, outfile, "str")
-
-    #--
-    #
-    write_element_name(fp, "src_raj")
-    source_ra = convert_sigproct(source_ra)
-    write_element_data (fp, source_ra, 'd')
-
-    #--
-    #
-    write_element_name(fp, "src_dej")
-    source_dec= convert_sigproct(source_dec)
-    write_element_data(fp, source_dec, 'd')
-    #-- 
-    #
-    write_element_name(fp, "az_start")
-    write_element_data(fp, 0.0, 'd')
-
-    #--
-    #
-    write_element_name(fp, "za_start")
-    write_element_data(fp, 0.0, 'd')
-
-    #--
-    #
-    write_element_name(fp, "tstart")
-    write_element_data(fp, float(t_start), 'd')
-
-    #--
-    #
-    write_element_name(fp, "foff")
-    write_element_data(fp, f_off, 'd')
-
-    #--
-    #
-    write_element_name(fp, "fch1")
-    write_element_data(fp, high_freq, 'd')
-
-    #--
-    #
-    write_element_name(fp, "nchans")
-    write_element_data(fp, sub_bands, 'i')
-
-    #--
-    #
-    write_element_name(fp, "data_type")
-    write_element_data(fp, 1, 'i')
-
-    #--
-    #
-    write_element_name(fp, "ibeam")
-    write_element_data(fp, 1, 'i')
-
-    #--
-    #
-    write_element_name(fp, "nbits")
-    nb = 8 if flout <= 0 else 32
-    write_element_data(fp, nb, 'i')
-
-    #--
-    #
-    write_element_name(fp, "tsamp")
-    write_element_data(fp, tsamp, 'd')
-
-    #--
-    #
-    write_element_name(fp, "nbeams")
-    write_element_data(fp, 1, 'i')
-
-    #--
-    #
-    write_element_name(fp, "nifs")
-    write_element_data(fp, 1, 'i')
-
-    #--
-    #
-    write_element_name(fp, "source_name")
-    write_element_data(fp, source_name, "str")
-
-    #--
-    #
-    write_element_name(fp, "machine_id")
-    write_element_data(fp, 20, 'i')
-
-    #--
-    #
-    write_element_name(fp, "telescope_id")
-    write_element_data(fp, 20, 'i')
-
-    #--
-    write_element_name(fp, etx)
-
-    fp.close
-    return True
-
-#
-# NOTUSED
-# NOTUSED
-#
-import os
-def do_exit(hfile, fbfile):
-    try:
-        fp = open(hfile, "ab")
-        initial_size = os.stat(hfile).st_size
+        fp = open(outfile, "wb")
         #
-        # Pad out to multiple of 4 bytes if using 32-bit/4-byte
-        #  data.
+        # Time for one sample, in sec
         #
-        if ".f32" in fbfile:
-            if (int(initial_size % 4) != 0):
-                r = int(initial_size % 4)
-                v = "\0"*r
-                if sys.version_info[0] == 2:
-                    fp.write(bytes(v))
-                else:
-                    fp.write(bytes(v,encoding='utf8'))
-            
-    except:
-        return
-    try:
-        ifp = open(fbfile, "rb")
-        fb_size = os.stat(fbfile).st_size
-    except:
-        return
-    while True:
-        inbuf = ifp.read(16384)
-        if len(inbuf) <= 0:
-            break
-        fp.write(inbuf)
-    fp.close()
-    ifp.close()
-    new_size = os.stat(hfile).st_size
+        tsamp=1.0/fbrate
 
-    #
-    # OK to remove unheadereed .int8 file if the concatenation succeeded
-    #
-    if (new_size == initial_size+fb_size):
-        os.remove(fbfile)
-    return
+        #
+        # Frequency offset between channels, in MHz
+        #
+        f_off=bw/fbsize
+        f_off /= 1.0e6
+        f_off *= -1
+
+        #
+        # Highest frequency represented in FB, in MHz
+        #
+        high_freq = freq+(bw/2.0)
+        high_freq  /= 1.0e6
+        high_freq -= (f_off/2.0)
+
+        #
+        # Lowest
+        #
+        low_freq = freq-(bw/2.0)
+        low_freq /= 1.0e6
+        low_freq += (f_off/2.0)
+
+        #
+        # Number of subbands
+        #
+        sub_bands=fbsize
+
+
+        #
+        # MJD
+        # Super approximate!
+        #
+        t_start = ((time.time()+1.0) / 86400.0) + 40587.0
+
+        #
+        # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
+        #
+        stx="HEADER_START"
+        etx="HEADER_END"
+        write_element_name(fp,stx)
+
+        #--
+        #
+        write_element_name(fp,"rawdatafile")
+        write_element_data(fp, outfile, "str")
+
+        #--
+        #
+        write_element_name(fp, "src_raj")
+        source_ra = convert_sigproct(source_ra)
+        write_element_data (fp, source_ra, 'd')
+
+        #--
+        #
+        write_element_name(fp, "src_dej")
+        source_dec= convert_sigproct(source_dec)
+        write_element_data(fp, source_dec, 'd')
+        #--
+        #
+        write_element_name(fp, "az_start")
+        write_element_data(fp, 0.0, 'd')
+
+        #--
+        #
+        write_element_name(fp, "za_start")
+        write_element_data(fp, 0.0, 'd')
+
+        #--
+        #
+        write_element_name(fp, "tstart")
+        write_element_data(fp, float(t_start), 'd')
+
+        #--
+        #
+        write_element_name(fp, "foff")
+        write_element_data(fp, f_off, 'd')
+
+        #--
+        #
+        write_element_name(fp, "fch1")
+        write_element_data(fp, high_freq, 'd')
+
+        #--
+        #
+        write_element_name(fp, "nchans")
+        write_element_data(fp, sub_bands, 'i')
+
+        #--
+        #
+        write_element_name(fp, "data_type")
+        write_element_data(fp, 1, 'i')
+
+        #--
+        #
+        write_element_name(fp, "ibeam")
+        write_element_data(fp, 1, 'i')
+
+        #--
+        #
+        write_element_name(fp, "nbits")
+        nb = 8 if flout <= 0 else 32
+        write_element_data(fp, nb, 'i')
+
+        #--
+        #
+        write_element_name(fp, "tsamp")
+        write_element_data(fp, tsamp, 'd')
+
+        #--
+        #
+        write_element_name(fp, "nbeams")
+        write_element_data(fp, 1, 'i')
+
+        #--
+        #
+        write_element_name(fp, "nifs")
+        write_element_data(fp, 1, 'i')
+
+        #--
+        #
+        write_element_name(fp, "source_name")
+        write_element_data(fp, source_name, "str")
+
+        #--
+        #
+        write_element_name(fp, "machine_id")
+        write_element_data(fp, 20, 'i')
+
+        #--
+        #
+        write_element_name(fp, "telescope_id")
+        write_element_data(fp, 20, 'i')
+
+        #--
+        write_element_name(fp, etx)
+
+        fp.close()
+        hdr_done = True
+        return True
+    else:
+        return False
+
+
+def get_wrenabled(pacer):
+	global hdr_done
+	
+	return hdr_done
