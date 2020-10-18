@@ -57,9 +57,14 @@ for profset in profsets:
     nprof = len(profset["profiles"])
     for profile in profset["profiles"]:
         
-        demaxed =list(profile["profile"])
+        demaxed = list(profile["profile"])
         idx = demaxed.index(max(demaxed))
-        demaxed[idx] = numpy.mean(demaxed)
+        avg = 0.0
+        for i in range(len(demaxed)):
+            if (i != idx):
+                avg += demaxed[i]
+        avg /= float(len(demaxed))
+        demaxed[idx] = avg
         #
         # Determine rough SNR
         #
@@ -136,7 +141,7 @@ plt.plot(x, numpy.divide(newq, max(best["profile"])), label=lbl)
 plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
 plt.legend(loc='lower left', fontsize='small')
 
-maxratdb = math.log(maxratio)/math.log(10.0)
+maxratdb = math.log(maxratio-1)/math.log(10.0)
 maxratdb *= 10.0
 best["profile"] = list(newq)
 best["snr"] = maxratio-1.0
