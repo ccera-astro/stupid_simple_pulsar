@@ -225,12 +225,10 @@ def convert_sigproct(v):
     timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
     return(float(timestr))
 
-def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first,flout):
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,flout):
     global hdr_countdown
     global hdr_done
 
-    if (first == None):
-        return None
 
     fp = open(outfile, "wb")
     #
@@ -269,7 +267,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     # MJD
     # Super approximate!
     #
-    t_start = (first / 86400.0) + 40587.0
+    t_start = ((time.time()+1.0) / 86400.0) + 40587.0
 
     #
     # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
@@ -294,7 +292,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     write_element_name(fp, "src_dej")
     source_dec= convert_sigproct(source_dec)
     write_element_data(fp, source_dec, 'd')
-    #--
+    #-- 
     #
     write_element_name(fp, "az_start")
     write_element_data(fp, 0.0, 'd')
@@ -376,6 +374,10 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     fp.close
     return True
 
+#
+# NOTUSED
+# NOTUSED
+#
 import os
 def do_exit(hfile, fbfile):
     try:

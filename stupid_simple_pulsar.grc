@@ -234,33 +234,6 @@ and dynamically</value>
     <key>variable</key>
     <param>
       <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(1616, 1004)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>exit_register</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>atexit.register(st_psr_helper.do_exit, hfilename, fbfilename if flout == 0 else fltname)</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
       <value>Filename construction for
 filterbank output file</value>
     </param>
@@ -337,49 +310,6 @@ filterbank output file</value>
     <param>
       <key>value</key>
       <value>[-10,-5,-2,0,2,5,10]</value>
-    </param>
-  </block>
-  <block>
-    <key>variable_function_probe</key>
-    <param>
-      <key>block_id</key>
-      <value>Stupid_folder</value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>function_args</key>
-      <value></value>
-    </param>
-    <param>
-      <key>function_name</key>
-      <value>first_sample_time</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(1392, 752)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>first_poller</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>poll_rate</key>
-      <value>1.0</value>
     </param>
   </block>
   <block>
@@ -476,7 +406,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1456, 980)</value>
+      <value>(1480, 788)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -488,7 +418,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>st_psr_helper.build_header_info(hfilename,pname,ra,dec,skyf,samp_rate,real_fbrate,fbsize,first_poller,flout)</value>
+      <value>st_psr_helper.build_header_info(hfilename,pname,ra,dec,skyf,samp_rate,real_fbrate,fbsize,flout)</value>
     </param>
   </block>
   <block>
@@ -1463,7 +1393,7 @@ spectrum--likely for historical reasons.</value>
     <key>blocks_file_sink</key>
     <param>
       <key>append</key>
-      <value>False</value>
+      <value>True</value>
     </param>
     <param>
       <key>alias</key>
@@ -1483,7 +1413,7 @@ spectrum--likely for historical reasons.</value>
     </param>
     <param>
       <key>file</key>
-      <value>fbfilename if flout == 0 else "/dev/null"</value>
+      <value>hfilename if flout == 0 else "/dev/null"</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -1514,7 +1444,7 @@ spectrum--likely for historical reasons.</value>
     <key>blocks_file_sink</key>
     <param>
       <key>append</key>
-      <value>False</value>
+      <value>True</value>
     </param>
     <param>
       <key>alias</key>
@@ -1534,7 +1464,7 @@ spectrum--likely for historical reasons.</value>
     </param>
     <param>
       <key>file</key>
-      <value>"/dev/null" if flout == 0 else fltname</value>
+      <value>"/dev/null" if flout == 0 else hfilename</value>
     </param>
     <param>
       <key>_coordinate</key>
@@ -5431,12 +5361,10 @@ def convert_sigproct(v):
     timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
     return(float(timestr))
 
-def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,first,flout):
+def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,flout):
     global hdr_countdown
     global hdr_done
 
-    if (first == None):
-        return None
 
     fp = open(outfile, "wb")
     #
@@ -5475,7 +5403,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     # MJD
     # Super approximate!
     #
-    t_start = (first / 86400.0) + 40587.0
+    t_start = ((time.time()+1.0) / 86400.0) + 40587.0
 
     #
     # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
@@ -5500,7 +5428,7 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     write_element_name(fp, "src_dej")
     source_dec= convert_sigproct(source_dec)
     write_element_data(fp, source_dec, 'd')
-    #--
+    #-- 
     #
     write_element_name(fp, "az_start")
     write_element_data(fp, 0.0, 'd')
@@ -5582,6 +5510,10 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
     fp.close
     return True
 
+#
+# NOTUSED
+# NOTUSED
+#
 import os
 def do_exit(hfile, fbfile):
     try:
