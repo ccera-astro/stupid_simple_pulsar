@@ -5,41 +5,250 @@ import time
 import struct
 import json
 
-rfi_counter = 3
-flatten_counter = 5
+
+
 smoother = None
 smoothed = False
 smoothing_estimate = None
 rfi_logging_counter = 12
 mask_log_list = []
+most_recent_mask = None
+recent_premask = None
+
+#
+# State transition handler for smoothing
+#
+def st_do_smoothing(state,spec,prefix,name):
+    global smoother
+    global smoothing_estimate
+
+    if (state == INIT):
+        smoother = [1.0]*len(spec)
+        smoothing_estimate = numpy.array(spec)
+        return ((1,smoother))
+    elif (state == WAITING):
+        smoothing_estimate = numpy.add(smoothing_estimate,spec)
+        smoothing_estimate = numpy.divide(smoothing_estimate, 2.0)
+        return ((1, smoother))
+    elif (state == READY):
+        #
+        # Grab the average of the central bits of the spectrum
+        #
+        avg = sum(smoothing_estimate[2:-2])
+        avg /= (len(smoothing_estimate)-4.0)
+        idx = 0
+        #
+        # Create a smoothing vector
+        #
+        for v in spec:
+            smoother[idx] = avg/v
+            idx += 1
+
+        return ((1,smoother))
+    else:
+        return ((0,smoother))
+        
+def st_do_rfilog(state,spec,prefix,name):
+    global frozen_agc
+    global smoother
+    global recent_premask
+
+    d = {}
+    mjd = (time.time() / 86400.0) + 40587.0
+    ltp = time.gmtime()
+    ltime = "%04d%02d%02d-%02d:%02d:%02d" % (ltp.tm_year,
+        ltp.tm_mon, ltp.tm_mday, ltp.tm_hour,
+        ltp.tm_min, ltp.tm_sec)
+    d["rfimask"] = list(recent_premask)
+    d["smoothing"] = list(smoother)
+    d["spectrum"] = list(numpy.multiply(numpy.log10(spec),10.0))
+    d["time"] = ltime
+    d["frozen_agc"] = list(frozen_agc)
+    d["composite_mask"] = list(numpy.multiply(frozen_agc,list(recent_premask)))
+    mask_log_list.append(d)
+    fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
+    fp = open(fn, "w")
+    fp.write(json.dumps(mask_log_list,indent=4)+"\n")
+
+    return ((0,0))
+
+def st_do_rfi(state,spec,prefix,name):
+    #
+    # Cant do any further calculations if we're gettings zeros
+    #
+    if (0.0 in spec):
+        return ((0,[1.0]*len(spec)))
+
+    if (state == INIT):
+        return ((1,[1.0]*len(spec)))
+
+    #
+    # Auto RFI detect
+    #
+    #
+    # We hold off for a bit until we have a better "view" of
+    #  the spectrum
+    #
+    avg = numpy.mean(spec)
+    idx = 0
+    retmask = [1.0]*len(spec)
+    for v in spec:
+        if (v > avg*4.5):
+            retmask[idx] = 0.0
+        idx += 1
+
+    return ((0,retmask))
+
+#
+# States
+#
+INIT = 0
+READY = 1
+COUNTING = 2
+WAITING = 3
+PROCESSING = 4
+state_strings = ["INIT", "READY", "COUNTING", "WAITING", "PROCESSING"]
+
+#
+# Indexes into list for struct-like
+#
+ST_TINIT = 0  # Timer value
+ST_STATE = 1  # Current state *index*
+ST_STATES = 2 # List of states
+ST_FUNC = 3   # function pointer
+ST_RVAL = 4   # Return value for no-call
+
+#
+# What to "return" from a function whose time hasn't yet arrived in the
+#   state machine.
+#
+
+
+#
+# Bit of a state machine
+#
+rfi_stable = {
+# name : timer-init current-state statelist
+    "rfi": [10,  0, [INIT,PROCESSING], st_do_rfi],
+    "flatten": [2,  0, [INIT,WAITING,WAITING,READY,PROCESSING], st_do_smoothing],
+    "logging" : [10,  0, [COUNTING], st_do_rfilog]
+}
+st_counter = 0.0
+
+
+def get_st_valid(d,key):
+    return d[key][0]
+
+def get_st_value(d,key):
+    return d[key][1]
+
 #
 # Process static mask-list, as well as auto RFI masking, and
 #  passband smoothing
 #
-most_recent_mask = None
-def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
-    global rfi_counter
-    global smoother
-    global flatten_counter
-    global smoothed
-    global smoothing_estimate
+
+last_time = time.time()
+def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
     global most_recent_mask
-    global rfi_logging_counter
-    global mask_log_list
-    global frozen_agc
+    global recent_premask
+    global rfi_stable
+    global st_counter
+    global last_time
 
-    if smoother == None:
-        smoother = [1.0]*len(rfi_poller)
-        smoothing_estimate = numpy.array(rfi_poller)
+    if rfi_poller == None or 0.0 in rfi_poller:
+        return [1.0]*len(rfi_poller)
 
+    #
+    # Special structuring for "flatten"
+    #
+    # Might generalize this at some point
+    #
+    bunchawaits = [WAITING]*5
+    rfi_stable["flatten"][ST_STATES] = [INIT]+bunchawaits+[READY,PROCESSING]
+
+    #
+    # These states use the (seconds) timer
+    #
+    timed_states = [INIT,COUNTING]
+
+    #
+    # We get called at some arbitrary rate, usually greater than 1Hz
+    #
+    # But timed states are in 1Hz
+    #
+    do_timed_states = False
+    now = time.time()
+    if ((now - last_time) >= 1.0):
+        st_counter += 1
+        st_intcnt = st_counter
+        last_time = now
+        do_timed_states = True
+
+    #
+    # Go down the state table
+    #
+    odict = {}
+    for key in rfi_stable:
+
+        #
+        # Get our dictionary entry
+        #
+        st = rfi_stable[key]
+        state = st[ST_STATES][st[ST_STATE]]
+
+        #
+        # Output dict, indexed by state-machine name
+        # A list with a "Valid" indicator in position 0
+        #
+        odict[key] = [False, 0]
+        rv = [0,0]
+        #
+        # Time to invoke this state transition
+        #
+        #
+        # Call function if timer expired an a timed state
+        #
+        #
+        if (do_timed_states == True and state in timed_states and st_intcnt != 0 and (st_intcnt % st[ST_TINIT]) == 0):
+            rv = st[ST_FUNC](state,rfi_poller,prefix,name)
+            odict[key] = [True, rv[1]]
+
+        #
+        # Not in timed_states?  Call it every damned time we get here
+        #
+        elif (state not in timed_states):
+            rv = st[ST_FUNC](state,rfi_poller,prefix,name)
+            odict[key] = [True, rv[1]]
+
+        #
+        # If the function says to advance to next state, do so
+        #
+        if (odict[key][0] == True and rv[0] != 0):
+            st[ST_STATE] += 1
+            st[ST_STATE] = st[ST_STATE] % len(st[ST_STATES])
+
+    #
+    # Compute static mask first
+    #
     retmask = [1.0]*nfb
-    flow = fc - bw/2.0
-    fhigh = fc + bw/2.0
-    freqs = flist.split(",")
-    fper = bw/float(nfb)
+
+    #
+    # If there is a static list
+    #
     if len(flist) > 0:
+
+        #
+        # Compute frequency end points
+        #
+        flow = fc - bw/2.0
+        fhigh = fc + bw/2.0
+        freqs = flist.split(",")
+        fper = bw/float(nfb)
         for f in freqs:
             ff = float(f)
+            #
+            # Is within our frequency window?
+            #
             if (ff >= flow and ff <= fhigh):
                 diff = ff - flow
                 indx = int(diff/fper)
@@ -47,68 +256,27 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name):
         retmask.reverse()
 
     #
-    # Cant do any calculations if we're gettings zeros
+    # Convolve with the dynamic mask computed by the state-machine call
+    #  (if valid)
     #
-    if (0.0 in rfi_poller):
-        most_recent_mask = retmask
-        return retmask
-    #
-    # Auto RFI detect
-    #
-    if (rfi_counter > 0):
-        rfi_counter -= 1
+    if (get_st_valid(odict,"rfi") == True):
+        retmask = numpy.multiply(retmask,get_st_value(odict,"rfi"))
+        recent_premask = retmask
     else:
-        avg = sum(rfi_poller)
-        avg /= len(rfi_poller)
-        idx = 0
-        for v in rfi_poller:
-            if (v > avg*3.5):
-                retmask[idx] = 0.0
-            idx += 1
+        recent_premask = retmask
+
+    if (get_st_valid(odict,"flatten") == True):
+        smoother = get_st_value(odict, "flatten")
+    else:
+        smoother = [1.0]*len(rfi_poller)
 
     #
-    # Passband flattening
+    # Our output aggregate mask is the
+    #  composition of the smoother and the
+    #  RFI mask
     #
-    if (flatten_counter > 0):
-        flatten_counter -= 1
-        smoothing_estimate = numpy.add(smoothing_estimate,rfi_poller)
-        smoothing_estimate = numpy.divide(smoothing_estimate, 2.0)
-    elif (smoothed == False):
-        #
-        # Grab the average of the central bits of the spectrum
-        #
-        avg = sum(rfi_poller[2:-2])
-        avg /= (len(rfi_poller)-4.0)
-        idx = 0
-        #
-        # Create a smoothing vector
-        #
-        for v in rfi_poller:
-            smoother[idx] = avg/v
-            idx += 1
-        smoothed = True
-
-
     rv = numpy.multiply(smoother,retmask)
     most_recent_mask = retmask
-    rfi_logging_counter -= 1
-    if (rfi_logging_counter < 0):
-        rfi_logging_counter = 12
-        d = {}
-        ltp = time.gmtime()
-        ltime = "%04d%02d%02d-%02d:%02d:%02d" % (ltp.tm_year,
-            ltp.tm_mon, ltp.tm_mday, ltp.tm_hour,
-            ltp.tm_min, ltp.tm_sec)
-        d["rfimask"] = list(retmask)
-        d["smoothing"] = list(smoother)
-        d["spectrum"] = list(numpy.multiply(numpy.log10(rfi_poller),10.0))
-        d["time"] = ltime
-        d["frozen_agc"] = list(frozen_agc)
-        d["composite_mask"] = list(numpy.multiply(frozen_agc,list(retmask)))
-        mask_log_list.append(d)
-        fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
-        fp = open(fn, "w")
-        fp.write(json.dumps(mask_log_list,indent=4)+"\n")
 
     return rv
 
@@ -384,6 +552,6 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
 
 
 def get_wrenabled(pacer):
-	global hdr_done
-	
-	return hdr_done
+    global hdr_done
+
+    return hdr_done
