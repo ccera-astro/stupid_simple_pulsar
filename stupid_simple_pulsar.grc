@@ -5185,9 +5185,11 @@ recent_premask = None
 #
 # State transition handler for smoothing
 #
-def st_do_smoothing(state,spec,prefix,name):
+def st_do_smoothing(state,args):
     global smoother
     global smoothing_estimate
+
+    spec = args["rfi_poller"]
 
     if (state == INIT):
         smoother = [1.0]*len(spec)
@@ -5214,14 +5216,19 @@ def st_do_smoothing(state,spec,prefix,name):
         return ((1,smoother))
     else:
         return ((0,smoother))
-        
-def st_do_rfilog(state,spec,prefix,name):
+
+def st_do_rfilog(state,args):
     global frozen_agc
     global smoother
     global recent_premask
 
+    prefix = args["prefix"]
+    name = args["name"]
+    mjd = args["mjd"]
+    spec = args["rfi_poller"]
+
+
     d = {}
-    mjd = (time.time() / 86400.0) + 40587.0
     ltp = time.gmtime()
     ltime = "%04d%02d%02d-%02d:%02d:%02d" % (ltp.tm_year,
         ltp.tm_mon, ltp.tm_mday, ltp.tm_hour,
@@ -5239,7 +5246,10 @@ def st_do_rfilog(state,spec,prefix,name):
 
     return ((0,0))
 
-def st_do_rfi(state,spec,prefix,name):
+def st_do_rfi(state,args):
+
+    spec = args["rfi_poller"]
+
     #
     # Cant do any further calculations if we're gettings zeros
     #
@@ -5322,6 +5332,21 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
     global st_counter
     global last_time
 
+    #
+    # Neither *args nor **kwargs is quite right for what I want do do here...
+    #
+    args = {
+        "flist" : flist,
+        "fc" : fc,
+        "bw" : bw,
+        "nfb" : nfb,
+        "rfi_poller" : rfi_poller,
+        "mjd" : mjd,
+        "prefix" : prefix,
+        "name" : name,
+        "eval_rate" : eval_rate
+    }
+
     if rfi_poller == None or 0.0 in rfi_poller:
         return [1.0]*len(rfi_poller)
 
@@ -5377,14 +5402,14 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
         #
         #
         if (do_timed_states == True and state in timed_states and st_intcnt != 0 and (st_intcnt % st[ST_TINIT]) == 0):
-            rv = st[ST_FUNC](state,rfi_poller,prefix,name)
+            rv = st[ST_FUNC](state,args)
             odict[key] = [True, rv[1]]
 
         #
         # Not in timed_states?  Call it every damned time we get here
         #
         elif (state not in timed_states):
-            rv = st[ST_FUNC](state,rfi_poller,prefix,name)
+            rv = st[ST_FUNC](state,args)
             odict[key] = [True, rv[1]]
 
         #
@@ -5736,7 +5761,7 @@ PYTHON HELPER CODE
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(992, 20)</value>
+      <value>(1824, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
