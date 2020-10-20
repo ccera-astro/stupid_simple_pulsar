@@ -5,55 +5,70 @@ import time
 import struct
 import json
 
+smoothing_dict = {
+    "smoother" : None,
+    "estimate" : None
+}
 
+rfi_dict = {
+    "mask_logs" : [],
+    "recent_mask" : None,
+    "recent_premask" : None,
+    "persistence" : None
+}
 
-smoother = None
-smoothed = False
-smoothing_estimate = None
-rfi_logging_counter = 12
-mask_log_list = []
-most_recent_mask = None
-recent_premask = None
+agc_dict = {
+    "frozen_agc" : None,
+    "counter" : 15
+}
+
+uber_dict = {
+    "smoothing" : smoothing_dict,
+    "rfi" : rfi_dict,
+    "agc" : agc_dict,
+}
 
 #
 # State transition handler for smoothing
 #
-def st_do_smoothing(state,args):
-    global smoother
-    global smoothing_estimate
+def st_do_smoothing(state,args,d):
 
     spec = args["rfi_poller"]
 
     if (state == INIT):
-        smoother = [1.0]*len(spec)
-        smoothing_estimate = numpy.array(spec)
-        return ((1,smoother))
+        d["smoother"] = [1.0]*len(spec)
+        d["estimate"] = numpy.array(spec)
+        return ((1,d["smoother"]))
     elif (state == WAITING):
-        smoothing_estimate = numpy.add(smoothing_estimate,spec)
-        smoothing_estimate = numpy.divide(smoothing_estimate, 2.0)
-        return ((1, smoother))
+        d["estimate"] = numpy.add(d["estimate"],spec)
+        d["estimate"] = numpy.divide(d["estimate"], 2.0)
+        return ((1, d["smoother"]))
     elif (state == READY):
         #
         # Grab the average of the central bits of the spectrum
         #
-        avg = sum(smoothing_estimate[2:-2])
-        avg /= (len(smoothing_estimate)-4.0)
+        avg = sum(d["estimate"][2:-2])
+        avg /= (len(d["estimate"])-4.0)
         idx = 0
         #
         # Create a smoothing vector
         #
         for v in spec:
-            smoother[idx] = avg/v
+            d["smoother"][idx] = avg/v
             idx += 1
 
-        return ((1,smoother))
+        return ((1,d["smoother"]))
     else:
-        return ((0,smoother))
+        return ((0,d["smoother"]))
 
-def st_do_rfilog(state,args):
-    global frozen_agc
-    global smoother
-    global recent_premask
+#
+# Handler for RFI logging
+#
+def st_do_rfilog(state,args,ud):
+
+    smoother = ud["smoothing"]["smoother"]
+    frozen_agc = ud["agc"]["frozen_agc"]
+    recent_premask = ud["rfi"]["recent_premask"]
 
     prefix = args["prefix"]
     name = args["name"]
@@ -66,22 +81,28 @@ def st_do_rfilog(state,args):
     ltime = "%04d%02d%02d-%02d:%02d:%02d" % (ltp.tm_year,
         ltp.tm_mon, ltp.tm_mday, ltp.tm_hour,
         ltp.tm_min, ltp.tm_sec)
-    d["rfimask"] = list(recent_premask)
-    d["smoothing"] = list(smoother)
+    d["rfimask"] = list(ud["rfi"]["recent_premask"])
+    d["persistence"] = list(ud["rfi"]["persistence"])
+    d["smoothing"] = list(ud["smoothing"]["smoother"])
     d["spectrum"] = list(numpy.multiply(numpy.log10(spec),10.0))
     d["time"] = ltime
-    d["frozen_agc"] = list(frozen_agc)
-    d["composite_mask"] = list(numpy.multiply(frozen_agc,list(recent_premask)))
-    mask_log_list.append(d)
+    d["frozen_agc"] = list(ud["agc"]["frozen_agc"])
+    d["composite_mask"] = list(numpy.multiply(ud["agc"]["frozen_agc"],
+        ud["rfi"]["recent_premask"]) )
+    ud["rfi"]["mask_logs"].append(d)
     fn = "%s/psr-%s-%8.2f-mask.json" % (prefix, name, mjd)
     fp = open(fn, "w")
-    fp.write(json.dumps(mask_log_list,indent=4)+"\n")
+    fp.write(json.dumps(ud["rfi"]["mask_logs"],indent=4)+"\n")
 
     return ((0,0))
 
-def st_do_rfi(state,args):
+#
+# Handler for RFI evalution
+#
+def st_do_rfi(state,args,d):
 
     spec = args["rfi_poller"]
+    
 
     #
     # Cant do any further calculations if we're gettings zeros
@@ -90,6 +111,7 @@ def st_do_rfi(state,args):
         return ((0,[1.0]*len(spec)))
 
     if (state == INIT):
+        d["persistence"] = [0]*len(spec)
         return ((1,[1.0]*len(spec)))
 
     #
@@ -103,7 +125,7 @@ def st_do_rfi(state,args):
     idx = 0
     retmask = [1.0]*len(spec)
     for v in spec:
-        if (v > avg*4.5):
+        if (v > avg*3.5):
             retmask[idx] = 0.0
         idx += 1
 
@@ -122,26 +144,24 @@ state_strings = ["INIT", "READY", "COUNTING", "WAITING", "PROCESSING"]
 #
 # Indexes into list for struct-like
 #
+# (Yes we could do this by creating a data-only "class", but
+#   so much work, so few bullets)
+#
 ST_TINIT = 0  # Timer value
 ST_STATE = 1  # Current state *index*
 ST_STATES = 2 # List of states
 ST_FUNC = 3   # function pointer
-ST_RVAL = 4   # Return value for no-call
-
-#
-# What to "return" from a function whose time hasn't yet arrived in the
-#   state machine.
-#
+ST_DICT = 4   # State handler data
 
 
 #
-# Bit of a state machine
+# Bit of a state machine table
 #
 rfi_stable = {
-# name : timer-init current-state statelist
-    "rfi": [10,  0, [INIT,PROCESSING], st_do_rfi],
-    "flatten": [2,  0, [INIT,WAITING,WAITING,READY,PROCESSING], st_do_smoothing],
-    "logging" : [10,  0, [COUNTING], st_do_rfilog]
+# name : timer-init current-state statelist function state-data
+    "rfi": [10,  0, [INIT,PROCESSING], st_do_rfi, rfi_dict],
+    "smoothing": [2,  0, [INIT,WAITING,WAITING,READY,PROCESSING], st_do_smoothing, smoothing_dict],
+    "logging" : [15,  0, [COUNTING], st_do_rfilog, uber_dict]
 }
 st_counter = 0.0
 
@@ -159,11 +179,25 @@ def get_st_value(d,key):
 
 last_time = time.time()
 def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
-    global most_recent_mask
-    global recent_premask
+    #
+    # State table
+    #
     global rfi_stable
+
+    #
+    # State counter
+    #
     global st_counter
+
+    #
+    # Last time were here
+    #
     global last_time
+
+    #
+    # Dictionary of dictionaries for state variables
+    #
+    global uber_dict
 
     #
     # Neither *args nor **kwargs is quite right for what I want do do here...
@@ -184,12 +218,12 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
         return [1.0]*len(rfi_poller)
 
     #
-    # Special structuring for "flatten"
+    # Special structuring for "smoothing"
     #
     # Might generalize this at some point
     #
-    bunchawaits = [WAITING]*5
-    rfi_stable["flatten"][ST_STATES] = [INIT]+bunchawaits+[READY,PROCESSING]
+    bunchawaits = [WAITING]*int(5*eval_rate)
+    rfi_stable["smoothing"][ST_STATES] = [INIT]+bunchawaits+[READY,PROCESSING]
 
     #
     # These states use the (seconds) timer
@@ -235,14 +269,14 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
         #
         #
         if (do_timed_states == True and state in timed_states and st_intcnt != 0 and (st_intcnt % st[ST_TINIT]) == 0):
-            rv = st[ST_FUNC](state,args)
+            rv = st[ST_FUNC](state,args,st[ST_DICT])
             odict[key] = [True, rv[1]]
 
         #
         # Not in timed_states?  Call it every damned time we get here
         #
         elif (state not in timed_states):
-            rv = st[ST_FUNC](state,args)
+            rv = st[ST_FUNC](state,args,st[ST_DICT])
             odict[key] = [True, rv[1]]
 
         #
@@ -286,12 +320,24 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
     #
     if (get_st_valid(odict,"rfi") == True):
         retmask = numpy.multiply(retmask,get_st_value(odict,"rfi"))
-        recent_premask = retmask
+        uber_dict["rfi"]["recent_premask"] = retmask
+        for i in range(len(retmask)):
+            if (retmask[i] == 0.0):
+                uber_dict["rfi"]["persistence"][i] = 5
     else:
-        recent_premask = retmask
+        uber_dict["rfi"]["recent_premask"] = retmask
+        uber_dict["rfi"]["persistence"] = [0]*len(retmask)
 
-    if (get_st_valid(odict,"flatten") == True):
-        smoother = get_st_value(odict, "flatten")
+    #
+    # Make an RFI detection "sticky" for a bit
+    #
+    for i in range(len(retmask)):
+        if (uber_dict["rfi"]["persistence"][i] > 0):
+            retmask[i] = 0.0
+            uber_dict["rfi"]["persistence"][i] -= 1
+    
+    if (get_st_valid(odict,"smoothing") == True):
+        smoother = get_st_value(odict, "smoothing")
     else:
         smoother = [1.0]*len(rfi_poller)
 
@@ -301,7 +347,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
     #  RFI mask
     #
     rv = numpy.multiply(smoother,retmask)
-    most_recent_mask = retmask
+    uber_dict["rfi"]["recent_mask"] = retmask
 
     return rv
 
@@ -309,14 +355,11 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
 # After a little while, we freeze the AGC value, to prevent
 #  any kind of pulsing
 #
-frozen_agc = None
-agc_counter = 12
 def process_agc(av):
-    global frozen_agc
-    global agc_counter
-    global most_recent_mask
+    global uber_dict
 
-    mask = most_recent_mask
+    mask = uber_dict["rfi"]["recent_mask"]
+
     #
     # Check for zeros
     #
@@ -324,20 +367,24 @@ def process_agc(av):
         return [1.0]*len(av)
 
     ret = numpy.array(av)
+    ret = numpy.add(av,1.0e-8)
     ret = numpy.divide([0.90]*len(av), av)
 
     for i in range(len(mask)):
-        if mask[i] <= 0.0:
+        if mask[i] != 1.0:
             ret[i] = 0.0
 
-    if (agc_counter > 0):
-        agc_counter -= 1
-        frozen_agc = ret
+    if (uber_dict["agc"]["counter"] > 0):
+        uber_dict["agc"]["counter"] -=1
+        uber_dict["agc"]["frozen_agc"] = ret
         return ret
     else:
-        return numpy.multiply(frozen_agc,mask)
+        return numpy.multiply(uber_dict["agc"]["frozen_agc"],mask)
 
-
+#
+# Find a filter-bank output rate this produces strictly-integer
+#  decimation.
+#
 def find_rate(srate,fbsize,target):
 
     brate = float(srate)/float(fbsize)
@@ -351,8 +398,9 @@ def find_rate(srate,fbsize,target):
 
     #
     # Try to find a an integral rate
+    # We prefer rates that are higher rather than lower
     #
-    for r in numpy.arange(target-100,target*2.5,5.0):
+    for r in numpy.arange(target-200,target*2.5,5.0):
         decim = float(brate)/float(r)
         if (decim == float(int(decim))):
             return r
