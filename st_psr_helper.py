@@ -396,14 +396,11 @@ def find_rate(srate,fbsize,target):
     if (decim == float(int(decim))):
         return target
 
-    #
-    # Try to find a an integral rate
-    # We prefer rates that are higher rather than lower
-    #
-    for r in numpy.arange(target-200,target*2.5,5.0):
-        decim = float(brate)/float(r)
-        if (decim == float(int(decim))):
-            return r
+    rate = 3125.0*4.0
+    
+    decim = int(srate/fbsize/rate)
+    rate = float(srate)/float(fbsize)/float(decim)
+    return rate
 
 
 #

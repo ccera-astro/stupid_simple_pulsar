@@ -49,11 +49,13 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             in_sig=[np.float32],
             out_sig=None
         )
-        # if an attribute with the same name as a parameter is found,
-        # a callback is registered (properties work, too).
-
+        
+        #
+        # Remember that we run at 4 times the notional filterbank
+        #   sample rate.  So compute delays appropriately
+        #
         self.set_output_multiple(fbsize)
-        self.maxdelay = round(smear * float(fbrate))
+        self.maxdelay = round(smear * float(fbrate*4))
         self.maxdelay = int(self.maxdelay)
         self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
 
@@ -110,6 +112,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # Sample period
         #
+        # This is correct because we only run the "top half" of the folder
+        #  at the X4 rate--but after the median filter, this rate is correct
+        #
         self.sper = 1.0/float(fbrate)
 
         #
@@ -128,6 +133,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # The logging interval
         #
+        # Again, the rate as seen by the "bottom half" of the
+        #  folder is 'fbrate'.  ONLY the 'top half' (dedispersion)
+        #  "sees" the higher rate.
+        #
         self.INTERVAL = int(fbrate*interval)
         self.logcount = self.INTERVAL
         self.jsonlets = []
@@ -145,6 +154,13 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.subint = subint
         self.subtimer = self.subint
         self.subseq = 0
+        
+        
+        #
+        # Median filter buffer
+        #
+        self.mbuf = [0.0]*4
+        self.mcnt = 0
 
         self.first_sample = None
 
@@ -184,9 +200,20 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
 
+            self.mbuf[self.mcnt] = outval
+            self.mcnt += 1
+            if (self.mcnt >= len(self.mbuf)):
+                self.mcnt = 0
+            else:
+                continue
+            
+            outval = sum(self.mbuf)
+            outval -= max(self.mbuf)
+            outval -= min(self.mbuf)
+            outval /= 2.0
 
             #
-            # Outval now contains a single de-dispersed power sample
+            # Outval now contains a single de-dispersed and median-filtered power sample
             #
 
             #
