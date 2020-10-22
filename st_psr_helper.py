@@ -102,7 +102,7 @@ def st_do_rfilog(state,args,ud):
 def st_do_rfi(state,args,d):
 
     spec = args["rfi_poller"]
-    
+
 
     #
     # Cant do any further calculations if we're gettings zeros
@@ -335,7 +335,7 @@ def frqlst_to_mask(flist, fc, bw, nfb,rfi_poller,mjd,prefix,name,eval_rate):
         if (uber_dict["rfi"]["persistence"][i] > 0):
             retmask[i] = 0.0
             uber_dict["rfi"]["persistence"][i] -= 1
-    
+
     if (get_st_valid(odict,"smoothing") == True):
         smoother = get_st_value(odict, "smoothing")
     else:
@@ -396,8 +396,28 @@ def find_rate(srate,fbsize,target):
     if (decim == float(int(decim))):
         return target
 
-    rate = 3125.0*4.0
+    #
+    # Try to find some other rate
+    #
+    # Start high
+    #
+    for trial in numpy.arange(10000.0,30000.0,1.0):
+        decim = float(brate)/float(trial)
+        if (decim == float(int(decim))):
+            if (float(int(trial/4.0)) == trial/4.0):
+                return trial
     
+    #
+    # Compromise to lower rates if necessary
+    #       
+    for trial in numpy.arange(5000.0,10000.0,1.0):
+        decim = float(brate)/float(trial)
+        if (decim == float(int(decim))):
+            if (float(int(trial/4.0)) == trial/4.0):
+                return trial
+
+
+    rate = float(target)
     decim = int(srate/fbsize/rate)
     rate = float(srate)/float(fbsize)/float(decim)
     return rate
