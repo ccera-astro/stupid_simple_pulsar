@@ -14,6 +14,7 @@ parser.add_argument("--name", default=None, required=True)
 parser.add_argument("--outfile", default=None, required=True)
 parser.add_argument("--random", action="store_true")
 parser.add_argument("--outjson", default=None)
+parser.add_argument("--allbest", default=False, action="store_true")
 args = parser.parse_args()
 
 fp = open (args.infile, "r")
@@ -49,7 +50,7 @@ for profset in profsets:
 
     set_time = profset["time"]
     set_seq = profset["sequence"]
-    #set_lmst = profset["lmst"]
+    set_lmst = profset["lmst"]
     
     #
     # For each profile in the set
@@ -106,57 +107,101 @@ for profset in profsets:
             best["sequence"] = set_seq
             break
 
-#
-# Create a plot of it...
-#
-x = []
-l = len(best["profile"])
-q = best["profile"]
-mxi = q.index(max(q))
-newq = numpy.zeros(l)
+if (args.allbest == True):
+    # Do stuff
+    yvals = []
+    p0vals = []
+    for profset in profsets:
+        if profset["sequence"] == best["sequence"]:
+            for profile in profset["profiles"]:
+                yvals.append(profile["profile"])
+                p0vals.append(profile["p0"])
+                l = len(profile["profile"])
+                
+    ppage = 2
+    i = 0
+    z = float(len(yvals))/float(ppage)
+    z += 0.5
+    z = int(z)
+    for f in range(z):
+        plt.figure(f)
+        fig, axes = plt.subplots(ppage)
+        plt.subplots_adjust(hspace=0.3)
+        x = []
+        #
+        # Create x axis as "phase" of profiles
+        #
+        for v in range(l):
+            x.append(float(v)/float(l))
+            
+        for q in range(ppage):
+            ndx = i
+            if (ndx < len(yvals)):
+                axes[q].plot(x,numpy.divide(yvals[ndx],max(yvals[ndx])))
+                if (best["p0"] == p0vals[ndx]):
+                    b = "BEST"
+                else:
+                    b = " "
+                axes[q].title.set_text("P0 est: %-.9f  N:%d %s" % (p0vals[ndx], ndx, b))
+                axes[q].set_ylabel('Normalized Amplitude')
+                axes[q].grid(True)
+                #axes[i].set_xlabel('Pulsar Phase')
+                i += 1
+                
+        plt.savefig("%d-" % f + args.outfile, dpi=100)
+        
+else:
+    #
+    # Create a plot of it...
+    #
+    x = []
+    l = len(best["profile"])
+    q = best["profile"]
+    mxi = q.index(max(q))
+    newq = numpy.zeros(l)
 
-#
-# reorder so that max signal is right in the middle
-#
-indx = mxi
-ondx = int(l/2)
+    #
+    # reorder so that max signal is right in the middle
+    #
+    indx = mxi
+    ondx = int(l/2)
 
-for i in range(l):
-    newq[ondx] = q[indx]
-    indx += 1
-    indx = indx % l
-    ondx += 1
-    ondx = ondx % l
-#
-# Create x axis as "phase" of best profile
-#
-for v in range(l):
-    x.append(float(v)/float(l))
-    
-#
-# Plot normalized profile against "phase"
-#
-lbl="Fc:%dM/Bw:%-.2fM/Tsamp:%-.2fus" % (profset["freq"]/1.0e6, profset["bw"]/1.0e6, profset["sampletime"]*1.0e6)
-plt.plot(x, numpy.divide(newq, max(best["profile"])), label=lbl)
-plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
-plt.legend(loc='lower left', fontsize='small')
+    for i in range(l):
+        newq[ondx] = q[indx]
+        indx += 1
+        indx = indx % l
+        ondx += 1
+        ondx = ondx % l
+    #
+    # Create x axis as "phase" of best profile
+    #
+    for v in range(l):
+        x.append(float(v)/float(l))
+        
+    #
+    # Plot normalized profile against "phase"
+    #
+    lbl="Fc:%dM/Bw:%-.2fM/Tsamp:%-.2fus" % (profset["freq"]/1.0e6, profset["bw"]/1.0e6, profset["sampletime"]*1.0e6)
+    plt.plot(x, numpy.divide(newq, max(best["profile"])), label=lbl)
+    plt.suptitle(name+": Best profile @ "+best["time"]+" seq: "+str(best["sequence"]))
+    plt.legend(loc='lower left', fontsize='small')
 
-maxratdb = math.log(maxratio-1)/math.log(10.0)
-maxratdb *= 10.0
-best["profile"] = list(newq)
-best["snr"] = maxratio-1.0
-best["snrdB"] = maxratdb
+    maxratdb = math.log(maxratio-1)/math.log(10.0)
+    maxratdb *= 10.0
+    best["profile"] = list(newq)
+    best["snr"] = maxratio-1.0
+    best["snrdB"] = maxratdb
 
-plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2fdB" % (l, maxratdb))
-plt.ylabel('Normalized Amplitude')
-plt.xlabel('Pulsar Phase')
-plt.grid(True)
-plt.savefig(args.outfile)
+    plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2fdB" % (l, maxratdb))
+    plt.ylabel('Normalized Amplitude')
+    plt.xlabel('Pulsar Phase')
+    plt.grid(True)
+    plt.savefig(args.outfile)
 
-#
-# Save some summary data from our best-profile search
-#
-if (args.outjson != None):
-    fp = open(args.outjson, "w")
-    fp.write(json.dumps(best, indent=4)+"\n")
-    fp.close()
+    #
+    # Save some summary data from our best-profile search
+    #
+    if (args.outjson != None):
+        fp = open(args.outjson, "w")
+        fp.write(json.dumps(best, indent=4)+"\n")
+        fp.close()
