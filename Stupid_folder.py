@@ -39,7 +39,7 @@ def cur_sidereal(longitude):
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=10.0,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
+    def __init__(self, fbsize=16,smear=0.015,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
         longitude=-75.984,subint=0):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
@@ -49,7 +49,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             in_sig=[np.float32],
             out_sig=None
         )
-        
+
         #
         # Remember that we run at 4 times the notional filterbank
         #   sample rate.  So compute delays appropriately
@@ -58,6 +58,16 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.maxdelay = round(smear * float(fbrate*4))
         self.maxdelay = int(self.maxdelay)
         self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
+        self.delaymap = np.zeros((self.maxdelay, fbsize))
+        andx = 0
+        md = self.maxdelay-1
+        for k in range(self.maxdelay):
+          for j in range(fbsize):
+            if ((md - (self.delayincr*j)) <= 0):
+                self.delaymap[andx][j] = 1.0
+          md -= 1
+          andx += 1
+        self.delaycount = 0
 
         #
         # Needed in a few places
@@ -154,8 +164,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.subint = subint
         self.subtimer = self.subint
         self.subseq = 0
-        
-        
+
+
         #
         # Median filter buffer
         #
@@ -187,16 +197,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             # Do delay/dedispersion logic
             #
-            if (self.maxdelay > 0):
-                outval = 0.0
-                #
-                # start at 1 because
-                #  we already know maxdelay > 1
-                #
-                for j in range(1,self.flen):
-                    if ((self.maxdelay - (self.delayincr*j)) <= 0):
-                        outval += q[bndx+j]
-                self.maxdelay -= 1
+            if (self.delaycount < self.maxdelay):
+                outval = np.multiply(q[bndx:bndx+self.flen],self.delaymap[self.delaycount])
+                outval = math.fsum(outval)
+                self.delaycount += 1
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
 
@@ -206,7 +210,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.mcnt = 0
             else:
                 continue
-            
+
             outval = sum(self.mbuf)
             outval -= max(self.mbuf)
             outval -= min(self.mbuf)
