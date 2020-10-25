@@ -5693,9 +5693,9 @@ def find_rate(srate,fbsize,target):
 #  time format used by SIGPROC
 #
 def convert_sigproct(v):
-    itime = int(v*3600.0)
-    hours = itime/3600
-    minutes = (itime-(hours*3600))/60
+    itime = int(float(v)*3600.0)
+    hours = int(itime/3600)
+    minutes = int((itime-(hours*3600))/60)
     seconds = itime - (hours*3600) - (minutes*60)
     timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
     return(float(timestr))
