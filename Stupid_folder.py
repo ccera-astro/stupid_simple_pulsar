@@ -204,6 +204,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
 
+            #
+            # 4-point median filter
+            #
             self.mbuf[self.mcnt] = outval
             self.mcnt += 1
             if (self.mcnt >= len(self.mbuf)):
@@ -211,6 +214,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             else:
                 continue
 
+
+            #
+            # At this point, our sample rate is reduced x4
+            #
             outval = sum(self.mbuf)
             outval -= max(self.mbuf)
             outval -= min(self.mbuf)
