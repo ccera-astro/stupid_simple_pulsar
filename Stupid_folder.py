@@ -175,6 +175,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.mcnt = 0
 
         self.first_sample = None
+        
+        self.outer_cnt = 0
+        self.inner_cnt = 0
 
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -205,7 +208,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.delaycount += 1
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
-
             #
             # 4-point median filter
             #
@@ -215,16 +217,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.mcnt = 0
             else:
                 continue
-
+            
             #
             # Compute the median
             #
-            #outval = sum(self.mbuf)
-            #outval -= max(self.mbuf)
-            #outval -= min(self.mbuf)
-            #outval /= 2.0
             outval = np.median(self.mbuf)
-            
             
             #
             # At this point, our sample rate is reduced x4
@@ -258,7 +255,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 # We eliminate the central correction for binary pulsars
                 #
 
-                z = (float(self.plen)*(float(self.MET)*self.sper)/self.periods[x]) + 0.5
+                z = (float(self.plen)*((float(self.MET)*self.sper)/self.periods[x])) + 0.5
 
                 #
                 # Convert that to an int, then reduce modulo number
@@ -286,7 +283,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
             #
             # If time to log, the output is the reduced-by-counts
-            #  value of the profile.
+            #  value of the profile, plus a plethora of housekeeping
+            #  info.
             #
             if (self.logcount <= 0):
                 outputs = []
@@ -303,7 +301,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
                 d["sequence"] = self.sequence
                 d["subseq"] = self.subseq
-                self.sequence += 1
+                
+                #
+                # Construct the profiles we're going to put in the .json dict
+                #  along with a bit of housekeeping information per profile
+                #
                 profiles = []
                 for x in range(self.nprofiles):
                     pd = {}
@@ -312,18 +314,38 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     pd["shift"] = self.shifts[x]
                     profiles.append(pd)
                 d["profiles"] = profiles
+                
+                #
+                # We keep a running record, and dump the entire record
+                #   every LOGTIME.
+                #
                 self.jsonlets.append(d)
                 self.logcount = self.INTERVAL
+                
+                #
+                # Handle "subint" sub-integrations
+                #
                 if (self.subint > 0):
                     self.subtimer -= 1
                     if (self.subtimer <= 0):
                         self.subtimer = self.subint
+                        
+                        #
+                        # We reduce the current profile almost to nothing,
+                        #  so that the "new" sub-int has something to chain
+                        #  from
+                        #
                         for x in range(self.nprofiles):
                             t = np.divide(self.profiles[x],self.pcounts[x])
                             t = np.multiply(t,0.3)
                             self.profiles[x] = np.array(t)
                             self.pcounts[x] = np.array([1.0]*self.plen)
                         self.subseq += 1
+                #
+                # Dump the accumulating JSON array
+                #  (well, actually, an array of dictionaries that
+                #   will get JSON encoded.)
+                #
                 fp = open(self.fname, "w")
                 fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
                 fp.close()
