@@ -54,19 +54,24 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # Remember that we run at 4 times the notional filterbank
         #   sample rate.  So compute delays appropriately
         #
-        self.set_output_multiple(fbsize)
+        self.set_output_multiple(fbsize*4)
         self.maxdelay = round(smear * float(fbrate*4))
         self.maxdelay = int(self.maxdelay)
         self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
         self.delaymap = np.zeros((self.maxdelay, fbsize))
-        andx = 0
+        
+        #
+        # We create a matrix/map that allows us to just
+        #  multiply the input filterbank channel either
+        #  by 0 (this channel is still delayed) or
+        #  by 1 (this channel is no longer delayed)
+        #
         md = self.maxdelay-1
         for k in range(self.maxdelay):
           for j in range(fbsize):
             if ((md - (self.delayincr*j)) <= 0):
-                self.delaymap[andx][j] = 1.0
+                self.delaymap[k][j] = 1.0
           md -= 1
-          andx += 1
         self.delaycount = 0
 
         #
@@ -104,14 +109,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
         #
         #
-        # How much time is in each bin?
         # The profile should be "exactly" as long as a single
         #   pulse period
         #
-        self.tbint = []
         self.periods = []
         for shift in self.shifts:
-            self.tbint.append((self.p0*(1.0+shift))/float(tbins))
             self.periods.append((self.p0*(1.0+shift)))
 
         #
@@ -209,20 +211,24 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             self.mbuf[self.mcnt] = outval
             self.mcnt += 1
-            if (self.mcnt >= len(self.mbuf)):
+            if (self.mcnt >= 4):
                 self.mcnt = 0
             else:
                 continue
 
-
+            #
+            # Compute the median
+            #
+            #outval = sum(self.mbuf)
+            #outval -= max(self.mbuf)
+            #outval -= min(self.mbuf)
+            #outval /= 2.0
+            outval = np.median(self.mbuf)
+            
+            
             #
             # At this point, our sample rate is reduced x4
             #
-            outval = sum(self.mbuf)
-            outval -= max(self.mbuf)
-            outval -= min(self.mbuf)
-            outval /= 2.0
-
             #
             # Outval now contains a single de-dispersed and median-filtered power sample
             #
@@ -302,7 +308,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 for x in range(self.nprofiles):
                     pd = {}
                     pd["profile"] = list(outputs[x])
-                    pd["p0"] = self.p0*(1.0+self.shifts[x])
+                    pd["p0"] = self.periods[x]
                     pd["shift"] = self.shifts[x]
                     profiles.append(pd)
                 d["profiles"] = profiles

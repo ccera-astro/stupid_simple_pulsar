@@ -192,7 +192,7 @@ else:
     best["snr"] = maxratio-1.0
     best["snrdB"] = maxratdb
 
-    plt.title("P0: " + str(best["p0"])+"s bins: %d SNR: %5.2fdB" % (l, maxratdb))
+    plt.title("Offset: " + str(best["shift"]*1.0e6)+"PPM bins: %d SNR: %5.2fdB" % (l, maxratdb))
     plt.ylabel('Normalized Amplitude')
     plt.xlabel('Pulsar Phase')
     plt.grid(True)
