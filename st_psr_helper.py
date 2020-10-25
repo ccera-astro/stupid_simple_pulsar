@@ -471,18 +471,6 @@ def write_element_data(fp,elem,t):
         else:
             fp.write(elem)
 
-#
-# Convert to the weirdness that is the hybrid floating-point
-#  time format used by SIGPROC
-#
-def convert_sigproct(v):
-    itime = int(v*3600.0)
-    hours = itime/3600
-    minutes = (itime-(hours*3600))/60
-    seconds = itime - (hours*3600) - (minutes*60)
-    timestr="%02d%02d%02d.0" % (hours, minutes, seconds)
-    return(float(timestr))
-
 hdr_done = False
 def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,flout,first):
     global hdr_done
