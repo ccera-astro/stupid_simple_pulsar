@@ -380,7 +380,7 @@ FOLDER
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1656, 1224)</value>
+      <value>(1408, 1064)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -473,7 +473,7 @@ FLAG
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1384, 1148)</value>
+      <value>(1600, 1148)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -541,6 +541,49 @@ filterbank output file</value>
     <param>
       <key>value</key>
       <value>int(max([math.pow(2.0,round(math.log(smear/(width/8.0))/math.log(2.0))), 8]))</value>
+    </param>
+  </block>
+  <block>
+    <key>variable_function_probe</key>
+    <param>
+      <key>block_id</key>
+      <value>agc_probe</value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>function_args</key>
+      <value></value>
+    </param>
+    <param>
+      <key>function_name</key>
+      <value>level</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1288, 968)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>impulse_poller</value>
+    </param>
+    <param>
+      <key>value</key>
+      <value>[1.0e7]*fbsize</value>
+    </param>
+    <param>
+      <key>poll_rate</key>
+      <value>1</value>
     </param>
   </block>
   <block>
@@ -665,7 +708,7 @@ CURRENT MJD AT GRAPH STARTUP
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1264, 1020)</value>
+      <value>(1120, 1068)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -767,7 +810,7 @@ CURRENT MJD AT GRAPH STARTUP
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1456, 968)</value>
+      <value>(1432, 968)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -902,7 +945,7 @@ CURRENT MJD AT GRAPH STARTUP
     </param>
     <param>
       <key>_io_cache</key>
-      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '0.015'), ('period', '0.71452'), ('filename', "'/dev/null'"), ('fbrate', '2500.0'), ('tbins', '250'), ('interval', '30'), ('tppms', "'0.0'"), ('freq', '408000000.0'), ('bw', '2560000.0'), ('longitude', '-75.984'), ('subint', '0')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['bw', 'freq', 'longitude', 'subint'])</value>
+      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '0.015'), ('period', '0.71452'), ('filename', "'/dev/null'"), ('fbrate', '2500.0'), ('tbins', '250'), ('interval', '30'), ('tppms', "'0.0'"), ('freq', '408000000.0'), ('bw', '2560000.0'), ('longitude', '-75.984'), ('subint', '0'), ('thresh', '300000.0')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['bw', 'freq', 'longitude', 'subint', 'thresh'])</value>
     </param>
     <param>
       <key>bw</key>
@@ -953,7 +996,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
     def __init__(self, fbsize=16,smear=0.015,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
-        longitude=-75.984,subint=0):  # only default arguments here
+        longitude=-75.984,subint=0,thresh=1.0e5*3.0):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -971,7 +1014,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.maxdelay = int(self.maxdelay)
         self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
         self.delaymap = np.zeros((self.maxdelay, fbsize))
-        
+
         #
         # We create a matrix/map that allows us to just
         #  multiply the input filterbank channel either
@@ -1079,7 +1122,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.subtimer = self.subint
         self.subseq = 0
 
-
         #
         # Median filter buffer
         #
@@ -1087,9 +1129,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.mcnt = 0
 
         self.first_sample = None
-        
+
         self.outer_cnt = 0
         self.inner_cnt = 0
+
+        self.thresh = thresh
+        self.thrcount = int(fbrate*4*5)
 
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -1120,6 +1165,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.delaycount += 1
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
+            
+            self.outer_cnt += 1
+
             #
             # 4-point median filter
             #
@@ -1129,12 +1177,23 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.mcnt = 0
             else:
                 continue
-            
+
             #
             # Compute the median
             #
             outval = np.median(self.mbuf)
-            
+
+            #
+            # Do gross impulse removal -- reduce to average
+            #
+            # We don't do the comparison until after our threshold
+            #  estimator has settled after start-up, which will be
+            #  in terms of "outer" (fast) samples--kept in self.thrcount
+            #
+            #
+            if (self.outer_cnt &gt; self.thrcount and outval &gt; (self.thresh*3.0)):
+                outval = self.thresh*random.uniform(0.98,1.02)
+
             #
             # At this point, our sample rate is reduced x4
             #
@@ -1213,7 +1272,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
                 d["sequence"] = self.sequence
                 d["subseq"] = self.subseq
-                
+
                 #
                 # Construct the profiles we're going to put in the .json dict
                 #  along with a bit of housekeeping information per profile
@@ -1226,14 +1285,14 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     pd["shift"] = self.shifts[x]
                     profiles.append(pd)
                 d["profiles"] = profiles
-                
+
                 #
                 # We keep a running record, and dump the entire record
                 #   every LOGTIME.
                 #
                 self.jsonlets.append(d)
                 self.logcount = self.INTERVAL
-                
+
                 #
                 # Handle "subint" sub-integrations
                 #
@@ -1241,7 +1300,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     self.subtimer -= 1
                     if (self.subtimer &lt;= 0):
                         self.subtimer = self.subint
-                        
+
                         #
                         # We reduce the current profile almost to nothing,
                         #  so that the "new" sub-int has something to chain
@@ -1332,6 +1391,10 @@ TIMES THE GIVEN FBRATE
     <param>
       <key>tbins</key>
       <value>tbins</value>
+    </param>
+    <param>
+      <key>thresh</key>
+      <value>numpy.sum(impulse_poller)</value>
     </param>
     <param>
       <key>tppms</key>
@@ -1444,7 +1507,7 @@ TIMES THE GIVEN FBRATE
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(808, 196)</value>
+      <value>(888, 252)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1477,9 +1540,6 @@ TIMES THE GIVEN FBRATE
       <key>comment</key>
       <value>*****************************
 EFFECT SPECTRAL INVERSION
-DOWNSTREAM FB TOOLS
-PREFER IT, AND MORE CONVENIENT
-FOR US, TOO
 ******************************</value>
     </param>
     <param>
@@ -1492,7 +1552,7 @@ FOR US, TOO
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(424, 16)</value>
+      <value>(504, 24)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2109,7 +2169,7 @@ the DC estimate</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(376, 196)</value>
+      <value>(376, 220)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -2516,7 +2576,7 @@ FFT FILTERBANK
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(568, 168)</value>
+      <value>(632, 192)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -5091,7 +5151,7 @@ IT DRIVES THE RFI EXCISION
     <key>single_pole_iir_filter_xx</key>
     <param>
       <key>alpha</key>
-      <value>1.0/(real_fbrate*1.5)</value>
+      <value>1.0/(real_fbrate*3.0)</value>
     </param>
     <param>
       <key>alias</key>
@@ -7443,7 +7503,7 @@ PYTHON HELPER CODE
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(840, 124)</value>
+      <value>(896, 124)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -7524,7 +7584,7 @@ PYTHON HELPER CODE
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(672, 12)</value>
+      <value>(800, 20)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -7740,7 +7800,7 @@ PYTHON HELPER CODE
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(368, 252)</value>
+      <value>(368, 268)</value>
     </param>
     <param>
       <key>_rotation</key>

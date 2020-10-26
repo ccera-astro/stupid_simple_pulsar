@@ -41,7 +41,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
     def __init__(self, fbsize=16,smear=0.015,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
-        longitude=-75.984,subint=0):  # only default arguments here
+        longitude=-75.984,subint=0,thresh=1.0e5*3.0):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -59,7 +59,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.maxdelay = int(self.maxdelay)
         self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
         self.delaymap = np.zeros((self.maxdelay, fbsize))
-        
+
         #
         # We create a matrix/map that allows us to just
         #  multiply the input filterbank channel either
@@ -167,7 +167,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.subtimer = self.subint
         self.subseq = 0
 
-
         #
         # Median filter buffer
         #
@@ -175,9 +174,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.mcnt = 0
 
         self.first_sample = None
-        
+
         self.outer_cnt = 0
         self.inner_cnt = 0
+
+        self.thresh = thresh
+        self.thrcount = int(fbrate*4*5)
 
     def get_profile(self):
         mid = int(self.nprofiles/2)
@@ -208,6 +210,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.delaycount += 1
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
+            
+            self.outer_cnt += 1
+
             #
             # 4-point median filter
             #
@@ -217,12 +222,23 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.mcnt = 0
             else:
                 continue
-            
+
             #
             # Compute the median
             #
             outval = np.median(self.mbuf)
-            
+
+            #
+            # Do gross impulse removal -- reduce to average
+            #
+            # We don't do the comparison until after our threshold
+            #  estimator has settled after start-up, which will be
+            #  in terms of "outer" (fast) samples--kept in self.thrcount
+            #
+            #
+            if (self.outer_cnt > self.thrcount and outval > (self.thresh*3.0)):
+                outval = self.thresh*random.uniform(0.98,1.02)
+
             #
             # At this point, our sample rate is reduced x4
             #
@@ -301,7 +317,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
                 d["sequence"] = self.sequence
                 d["subseq"] = self.subseq
-                
+
                 #
                 # Construct the profiles we're going to put in the .json dict
                 #  along with a bit of housekeeping information per profile
@@ -314,14 +330,14 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     pd["shift"] = self.shifts[x]
                     profiles.append(pd)
                 d["profiles"] = profiles
-                
+
                 #
                 # We keep a running record, and dump the entire record
                 #   every LOGTIME.
                 #
                 self.jsonlets.append(d)
                 self.logcount = self.INTERVAL
-                
+
                 #
                 # Handle "subint" sub-integrations
                 #
@@ -329,7 +345,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     self.subtimer -= 1
                     if (self.subtimer <= 0):
                         self.subtimer = self.subint
-                        
+
                         #
                         # We reduce the current profile almost to nothing,
                         #  so that the "new" sub-int has something to chain
