@@ -39,7 +39,7 @@ def cur_sidereal(longitude):
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=0.015,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
+    def __init__(self, fbsize=16,smear=0.0085,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
         tppms="0.0",freq=408.0e6,bw=2.56e6,
         longitude=-75.984,subint=0,thresh=1.0e5*3.0):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
@@ -50,15 +50,21 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             out_sig=None
         )
 
+
+        #
+        # Make sure we get data in appropriately-sized chunks
+        #       
+        self.set_output_multiple(fbsize*4)
+        
         #
         # Remember that we run at 4 times the notional filterbank
         #   sample rate.  So compute delays appropriately
         #
-        self.set_output_multiple(fbsize*4)
-        self.maxdelay = round(smear * float(fbrate*4))
-        self.maxdelay = int(self.maxdelay)
-        self.delayincr = int(round(float(self.maxdelay) / float(fbsize)))
+        self.ddelay = smear * float(fbrate*4)
+        self.delayincr = self.ddelay/fbsize
+        self.maxdelay = int(self.delayincr*(fbsize-1))
         self.delaymap = np.zeros((self.maxdelay, fbsize))
+        #print "Max delay: %d" % self.maxdelay
 
         #
         # We create a matrix/map that allows us to just
@@ -66,13 +72,15 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #  by 0 (this channel is still delayed) or
         #  by 1 (this channel is no longer delayed)
         #
-        md = self.maxdelay-1
+        md = self.maxdelay
         for k in range(self.maxdelay):
           for j in range(fbsize):
             if ((md - (self.delayincr*j)) <= 0):
                 self.delaymap[k][j] = 1.0
           md -= 1
         self.delaycount = 0
+        
+        #print self.delaymap
 
         #
         # Needed in a few places
@@ -205,8 +213,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             # Do delay/dedispersion logic
             #
             if (self.delaycount < self.maxdelay):
-                outval = np.multiply(q[bndx:bndx+self.flen],self.delaymap[self.delaycount])
-                outval = math.fsum(outval)
+                outvec = np.multiply(q[bndx:bndx+self.flen],self.delaymap[self.delaycount])
+                outval = math.fsum(outvec)
                 self.delaycount += 1
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
