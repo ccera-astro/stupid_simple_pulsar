@@ -1173,6 +1173,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             self.mbuf[self.mcnt] = outval
             self.mcnt += 1
+            
+            #
+            # Time to reset mcnt, and "fall" to the
+            #   lower half of this loop
+            #
             if (self.mcnt &gt;= 4):
                 self.mcnt = 0
             else:
@@ -1191,14 +1196,23 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #  in terms of "outer" (fast) samples--kept in self.thrcount
             #
             #
-            if (self.outer_cnt &gt; self.thrcount and outval &gt; (self.thresh*3.0)):
+            # self.thresh contains a longer-term average of the signal
+            #  coming in to the folder, and is updated at 1Hz through
+            #  the set_thresh() function coming out of the flow-graph
+            # 
+            # If our sample exceeds this value by a factor of 2.5 or
+            #  more (5dB in power), replace it with a randomly-dithered
+            #  version of the average
+            #
+            if (self.outer_cnt &gt; self.thrcount and outval &gt; (self.thresh*2.5)):
                 outval = self.thresh*random.uniform(0.98,1.02)
 
             #
             # At this point, our sample rate is reduced x4
             #
             #
-            # Outval now contains a single de-dispersed and median-filtered power sample
+            # Outval now contains a single de-dispersed, median-filtered
+            #   strong-impulse-removed power sample
             #
 
             #
