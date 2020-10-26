@@ -1016,10 +1016,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #   sample rate.  So compute delays appropriately
         #
         self.ddelay = smear * float(fbrate*4)
-        self.delayincr = self.ddelay/fbsize
-        self.maxdelay = int(self.delayincr*(fbsize-1))
+        self.delayincr = self.ddelay/float(fbsize-1.0)
+        self.delayincr += self.ddelay/float(fbsize)
+        self.delayincr /= 2.0
+        self.maxdelay = int(round(self.delayincr*(fbsize-1)))
         self.delaymap = np.zeros((self.maxdelay, fbsize))
-        #print "Max delay: %d" % self.maxdelay
 
         #
         # We create a matrix/map that allows us to just
@@ -1027,7 +1028,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #  by 0 (this channel is still delayed) or
         #  by 1 (this channel is no longer delayed)
         #
-        md = self.maxdelay
+        md = self.maxdelay-1
         for k in range(self.maxdelay):
           for j in range(fbsize):
             if ((md - (self.delayincr*j)) &lt;= 0):
@@ -1035,8 +1036,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
           md -= 1
         self.delaycount = 0
         
-        #print self.delaymap
-
+        if False:
+            print "%d:%f" % (len(self.delaymap), self.delayincr)
+            for me in self.delaymap:
+                print me
         #
         # Needed in a few places
         #
@@ -1912,7 +1915,7 @@ BY THIS BLOCK
     </param>
   </block>
   <block>
-    <key>blocks_keep_one_in_n</key>
+    <key>blocks_integrate_xx</key>
     <param>
       <key>alias</key>
       <value></value>
@@ -1926,12 +1929,16 @@ BY THIS BLOCK
       <value></value>
     </param>
     <param>
+      <key>decim</key>
+      <value>4</value>
+    </param>
+    <param>
       <key>_enabled</key>
       <value>True</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1120, 352)</value>
+      <value>(1488, 844)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1939,7 +1946,11 @@ BY THIS BLOCK
     </param>
     <param>
       <key>id</key>
-      <value>blocks_keep_one_in_n_0</value>
+      <value>blocks_integrate_xx_1</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -1948,14 +1959,6 @@ BY THIS BLOCK
     <param>
       <key>minoutbuf</key>
       <value>0</value>
-    </param>
-    <param>
-      <key>n</key>
-      <value>4</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
     </param>
     <param>
       <key>vlen</key>
@@ -1963,7 +1966,7 @@ BY THIS BLOCK
     </param>
   </block>
   <block>
-    <key>blocks_keep_one_in_n</key>
+    <key>blocks_integrate_xx</key>
     <param>
       <key>alias</key>
       <value></value>
@@ -1977,12 +1980,16 @@ BY THIS BLOCK
       <value></value>
     </param>
     <param>
+      <key>decim</key>
+      <value>4</value>
+    </param>
+    <param>
       <key>_enabled</key>
       <value>True</value>
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1496, 848)</value>
+      <value>(848, 364)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1990,7 +1997,11 @@ BY THIS BLOCK
     </param>
     <param>
       <key>id</key>
-      <value>blocks_keep_one_in_n_1</value>
+      <value>blocks_integrate_xx_2</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
     </param>
     <param>
       <key>maxoutbuf</key>
@@ -1999,14 +2010,6 @@ BY THIS BLOCK
     <param>
       <key>minoutbuf</key>
       <value>0</value>
-    </param>
-    <param>
-      <key>n</key>
-      <value>4</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
     </param>
     <param>
       <key>vlen</key>
@@ -2153,6 +2156,57 @@ the DC estimate</value>
     <param>
       <key>id</key>
       <value>blocks_multiply_const_vxx_2</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
+    <key>blocks_multiply_const_vxx</key>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>const</key>
+      <value>[0.25]*fbsize</value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(1024, 348)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>blocks_multiply_const_vxx_3</value>
     </param>
     <param>
       <key>type</key>
@@ -7714,7 +7768,7 @@ PYTHON HELPER CODE
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(920, 348)</value>
+      <value>(824, 308)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -7970,14 +8024,14 @@ THE 'profile_display' APP.
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_keep_one_in_n_0</source_block_id>
-    <sink_block_id>blocks_multiply_const_vxx_2</sink_block_id>
+    <source_block_id>blocks_integrate_xx_1</source_block_id>
+    <sink_block_id>blocks_copy_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_keep_one_in_n_1</source_block_id>
-    <sink_block_id>blocks_copy_0</sink_block_id>
+    <source_block_id>blocks_integrate_xx_2</source_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_3</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -7996,6 +8050,12 @@ THE 'profile_display' APP.
   <connection>
     <source_block_id>blocks_multiply_const_vxx_2</source_block_id>
     <sink_block_id>blocks_float_to_char_0</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>blocks_multiply_const_vxx_3</source_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_2</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -8073,7 +8133,7 @@ THE 'profile_display' APP.
   </connection>
   <connection>
     <source_block_id>virtual_source_2</source_block_id>
-    <sink_block_id>blocks_keep_one_in_n_0</sink_block_id>
+    <sink_block_id>blocks_integrate_xx_2</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -8091,7 +8151,7 @@ THE 'profile_display' APP.
   </connection>
   <connection>
     <source_block_id>virtual_source_3</source_block_id>
-    <sink_block_id>blocks_keep_one_in_n_1</sink_block_id>
+    <sink_block_id>blocks_integrate_xx_1</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

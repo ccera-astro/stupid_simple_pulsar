@@ -61,10 +61,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #   sample rate.  So compute delays appropriately
         #
         self.ddelay = smear * float(fbrate*4)
-        self.delayincr = self.ddelay/fbsize
-        self.maxdelay = int(self.delayincr*(fbsize-1))
+        self.delayincr = self.ddelay/float(fbsize-1.0)
+        self.delayincr += self.ddelay/float(fbsize)
+        self.delayincr /= 2.0
+        self.maxdelay = int(round(self.delayincr*(fbsize-1)))
         self.delaymap = np.zeros((self.maxdelay, fbsize))
-        #print "Max delay: %d" % self.maxdelay
 
         #
         # We create a matrix/map that allows us to just
@@ -72,7 +73,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #  by 0 (this channel is still delayed) or
         #  by 1 (this channel is no longer delayed)
         #
-        md = self.maxdelay
+        md = self.maxdelay-1
         for k in range(self.maxdelay):
           for j in range(fbsize):
             if ((md - (self.delayincr*j)) <= 0):
@@ -80,8 +81,10 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
           md -= 1
         self.delaycount = 0
         
-        #print self.delaymap
-
+        if False:
+            print "%d:%f" % (len(self.delaymap), self.delayincr)
+            for me in self.delaymap:
+                print me
         #
         # Needed in a few places
         #
