@@ -438,7 +438,7 @@ def convert_sigproct(v):
 # This will cause a header block to be prepended to the output file
 #
 # Thanks to Guillermo Gancio (ganciogm@gmail.com) for the inspiration
-#   and much of the code
+#   and much of the original code
 #
 # This seems to be broken for Python3
 #
@@ -448,7 +448,6 @@ def convert_sigproct(v):
 # Thanks to Guillermo Gancio (ganciogm@gmail.com) for the inspiration
 #   and much of the code
 #
-# This seems to be broken for Python3
 #
 import time
 import struct
@@ -471,24 +470,40 @@ def write_element_data(fp,elem,t):
         else:
             fp.write(elem)
 
+#
+# Build the header for the output .FIL
+#
+# We get called via a poller in the flow-graph at a fairly-brisk pace
+#  so that we can enable writing of the actual data as soon as possible.
+#
 hdr_done = False
 def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fbsize,flout,first):
     global hdr_done
 
+    #
+    # We don't know when the first sample arrived yet
+    #
     if (first == None or first < 86400.0):
         return None
 
 
+	#
+	# Haven't done the header yet
+	#
     if (hdr_done == False):
 
         fp = open(outfile, "wb")
         #
         # Time for one sample, in sec
         #
-        tsamp=1.0/fbrate
+        tsamp=1.0/float(fbrate)
 
         #
         # Frequency offset between channels, in MHz
+        # Negative to indicate channels are ordered highest-to-lowest
+        #  some older tooling *REQUIRES* this ordering, so might
+        #  as well follow the tradition, and that's the way the
+        #  flow-graph and de-dispersion is also organized.
         #
         f_off=bw/fbsize
         f_off /= 1.0e6
@@ -516,33 +531,35 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
 
         #
         # MJD
-        # Super approximate!
+        # Good to within probably 50ms of system time
         #
-        t_start = ((time.time()+1.0) / 86400.0) + 40587.0
+        t_start = (first/86400.0)+40587.0;
 
         #
         # The rest here is mostly due to Guillermo Gancio ganciogm@gmail.com
         #
+        # With considerable updates done here to support Python3
+        #
         stx="HEADER_START"
-        etx="HEADER_END"
         write_element_name(fp,stx)
 
-        #--
+        #-- Establish file type and name
         #
         write_element_name(fp,"rawdatafile")
         write_element_data(fp, outfile, "str")
 
-        #--
+        #-- Source RA (J2000)
         #
         write_element_name(fp, "src_raj")
         source_ra = convert_sigproct(source_ra)
         write_element_data (fp, source_ra, 'd')
 
-        #--
+        #-- Source DEC (J2000)
         #
         write_element_name(fp, "src_dej")
         source_dec= convert_sigproct(source_dec)
         write_element_data(fp, source_dec, 'd')
+        
         #--
         #
         write_element_name(fp, "az_start")
@@ -553,73 +570,74 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
         write_element_name(fp, "za_start")
         write_element_data(fp, 0.0, 'd')
 
-        #--
+        #-- MJD of first sample -- approximately
         #
         write_element_name(fp, "tstart")
         write_element_data(fp, float(t_start), 'd')
 
-        #--
+        #-- Frequency spacing between channels
         #
         write_element_name(fp, "foff")
         write_element_data(fp, f_off, 'd')
 
-        #--
+        #-- Frequency of 1st (lowest) channel in the FB
         #
         write_element_name(fp, "fch1")
         write_element_data(fp, high_freq, 'd')
 
-        #--
+        #-- Number of channels in the FB
         #
         write_element_name(fp, "nchans")
         write_element_data(fp, sub_bands, 'i')
 
-        #--
+        #-- Data type--raw data
         #
         write_element_name(fp, "data_type")
         write_element_data(fp, 1, 'i')
 
-        #--
+        #-- ???
         #
         write_element_name(fp, "ibeam")
         write_element_data(fp, 1, 'i')
 
-        #--
+        #-- Data bits: either 8 bit int or 32-bit float
         #
         write_element_name(fp, "nbits")
         nb = 8 if flout <= 0 else 32
         write_element_data(fp, nb, 'i')
 
-        #--
+        #-- Sample period
         #
         write_element_name(fp, "tsamp")
         write_element_data(fp, tsamp, 'd')
 
-        #--
+        #-- Single beam
         #
         write_element_name(fp, "nbeams")
         write_element_data(fp, 1, 'i')
 
-        #--
+        #-- Single IF (fom one polarization)
         #
         write_element_name(fp, "nifs")
         write_element_data(fp, 1, 'i')
 
-        #--
+        #-- The catalog name of the source
         #
         write_element_name(fp, "source_name")
         write_element_data(fp, source_name, "str")
 
-        #--
+        #-- Machine id.  Arbitrary
         #
         write_element_name(fp, "machine_id")
         write_element_data(fp, 20, 'i')
 
-        #--
+        #-- Telescope id.  Arbitrary
         #
         write_element_name(fp, "telescope_id")
         write_element_data(fp, 20, 'i')
 
-        #--
+        #-- End of header
+        etx="HEADER_END"
         write_element_name(fp, etx)
 
         fp.close()
@@ -629,6 +647,11 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
         return False
 
 
+#
+# We get polled, and when hdr_done is set to True,
+#  The flow-graph can proceed with writing sample data
+#  to the .FIL file.
+#
 def get_wrenabled(pacer):
     global hdr_done
 

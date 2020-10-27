@@ -15,6 +15,10 @@ import ephem
 import math
 import random
 
+#
+# Many of my RA programs haul this little function around...
+# Should be converted to astropy at some point...
+#
 def cur_sidereal(longitude):
     longstr = "%02d" % int(longitude)
     longstr = longstr + ":"
@@ -40,8 +44,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     """A pulsar folder/de-dispersion block"""
 
     def __init__(self, fbsize=16,smear=0.0085,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
-        tppms="0.0",freq=408.0e6,bw=2.56e6,
-        longitude=-75.984,subint=0,thresh=1.0e5*3.0):  # only default arguments here
+        tppms="0.0",frequ=408.0e6,bwid=2.56e6,
+        longit=-75.984,subints=0,thresh=1.0e5*3.0,mlen=4):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -50,17 +54,23 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             out_sig=None
         )
 
+        #
+        # Various bits and pieces *know* what size the median filter is
+        #  This could change at some point, but for now we set it here, and everything below
+        #  that needs to "know* uses this
+        #
+        self.MEDIANSIZE = mlen
 
         #
         # Make sure we get data in appropriately-sized chunks
         #
-        self.set_output_multiple(fbsize*4)
+        self.set_output_multiple(fbsize*self.MEDIANSIZE)
 
         #
-        # Remember that we run at 4 times the notional filterbank
+        # Remember that we run at self.MEDIANSIZE times the notional filterbank
         #   sample rate.  So compute delays appropriately
         #
-        self.ddelay = smear * float(fbrate*4)
+        self.ddelay = smear * float(fbrate*self.MEDIANSIZE)
         self.delayincr = self.ddelay/float(fbsize-1.0)
         self.delayincr += self.ddelay/float(fbsize)
         self.delayincr /= 2.0
@@ -117,40 +127,60 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.profiles = np.zeros((len(self.shifts),tbins))
         self.pcounts = np.zeros((len(self.shifts),tbins))
         self.nprofiles = len(self.profiles)
+        
+        #
+        # The profile length as phase bins
+        #
+        self.plen = int(tbins)
 
         #
         #
         # The profile should be "exactly" as long as a single
         #   pulse period
+        # We have compute the period offsets and perturb the
+        #  period appropriately, producing an array of
+        #  periods.
+        #
+        # Typically, the offsets are at most a few PPM
         #
         self.periods = []
         for shift in self.shifts:
             self.periods.append((self.p0*(1.0+shift)))
 
         #
-        # The profile length
+        # Slightly accelerate math in the folding loop
         #
-        self.plen = int(tbins)
-
+        self.pax = []
+        for period in self.periods:
+			self.pax.append(float(self.plen)/period)
         #
-        # Sample period
+        # Input sample period (UNRELATED TO PULSAR PERIOD)
         #
         # This is correct because we only run the "top half" of the folder
-        #  at the X4 rate--but after the median filter, this rate is correct
+        #  at the self.MEDIANSIZE rate--but after the median filter
+        #  this rate is correct.
         #
         self.sper = 1.0/float(fbrate)
 
         #
         # Mission Elapsed Time
-        # This is moved along at every time samples arrival--incremented
-        #   by 'self.sper'
+        #
+        # Folding relies on this (INTEGER!) counter being incremented every time
+        #  a new sample arrives from the filterbank.  Where "sample" is the aggregate
+        #  of all the filterbank outputs summed.
+        #
+        # It is kept as an integer to reduce numerical error accumulation
         #
         self.MET = 0
 
         #
-        # Open the output file
+        # Set output filename
         #
         self.fname = filename
+
+        #
+        # Initialize the profile logging outer main sequence number
+        #
         self.sequence = 0
 
         #
@@ -158,43 +188,52 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # Again, the rate as seen by the "bottom half" of the
         #  folder is 'fbrate'.  ONLY the 'top half' (dedispersion)
-        #  "sees" the higher rate.
+        #  "sees" the higher (self.MEDIANSIZE) rate.
         #
         self.INTERVAL = int(fbrate*interval)
         self.logcount = self.INTERVAL
+
+        #
+        # The main list/array that will be written as JSON, and appended to
+        #  throughout the run
+        #
         self.jsonlets = []
 
-        self.bw = bw
-        self.freq = freq
-        self.longitude = longitude
+        #
+        # Some housekeeping numboids
+        #
+        self.bw = bwid
+        self.freq = frequ
+        self.longitude = longit
 
         #
         # Sub-integration management
         #
-        self.subint = subint
+        self.subint = subints
         self.subtimer = self.subint
         self.subseq = 0
 
         #
         # Median filter buffer
         #
-        self.mbuf = [0.0]*4
+        self.mbuf = [0.0]*self.MEDIANSIZE
         self.mcnt = 0
 
         #
-        # Record time-of-day of first sample
+        # To record time-of-day of first sample
+        # The work() function will initialize this on first sample
         #
         self.first_sample = None
 
         #
         # Housekeeping counters for both "outer" (top half) and
-        #   "inner" (botto half) of epoch folder.
+        #   "inner" (bottom half) of epoch folder.
         #
         self.outer_cnt = 0
         self.inner_cnt = 0
 
         #
-        # Strong impulse removal threshold/3
+        # Strong impulse removal threshold/2.5
         #
         self.thresh = thresh
 
@@ -205,6 +244,12 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         self.thrcount = int(fbrate*4*5)
 
+    #
+    # Get the current zero-PPM profile
+    #
+    # Supports the profile_display program, which gets
+    #  at this via XMLRPC
+    #
     def get_profile(self):
         mid = int(self.nprofiles/2)
         if (0 in self.pcounts[mid]):
@@ -214,6 +259,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             l.append(float(v))
         return l
 
+    #
+    # So the header-writer get get the first sample time.
+    #
     def first_sample_time(self):
         return self.first_sample
 
@@ -221,9 +269,20 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     # Logging into our friend the ever-growing JSON buffer
     #
     def do_logging(self):
+
+        #
+        # First, produce a list of averaged profiles
+        #  remember we keep both an accumulator and
+        #  a counter, so that we can produce an average
+        #  at log time.
+        #
         outputs = []
         for x in range(self.nprofiles):
             outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
+
+        #
+        # Create a housekeeping dictionary
+        #
         d = {}
         t = time.gmtime()
         d["sampletime"] = self.sper
@@ -237,7 +296,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         d["subseq"] = self.subseq
 
         #
-        # Construct the profiles we're going to put in the .json dict
+        # Construct the list of profiles we're going to put in the .json dict
         #  along with a bit of housekeeping information per profile
         #
         profiles = []
@@ -253,6 +312,13 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # We keep a running record, and dump the entire record
         #   every LOGTIME.
         #
+        # This allows us to have a syntax-complete JSON file
+        #  every time we write the file.  It means that the I/O
+        #  load increases as time moves on, but since we're only
+        #  doing this once per minute (by default), and really not
+        #  creating THAT much data, this seems to work OK
+        #
+        #
         self.jsonlets.append(d)
 
         #
@@ -260,19 +326,37 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         if (self.subint > 0):
             self.subtimer -= 1
+
+            #
+            # Time to start a new sub-integration
+            #
             if (self.subtimer <= 0):
                 self.subtimer = self.subint
 
                 #
                 # We reduce the current profile almost to nothing,
                 #  so that the "new" sub-int has something to chain
-                #  from
+                #  from, but only a little bit of influence from what
+                #  has gone before
                 #
                 for x in range(self.nprofiles):
+                    #
+                    # So compute the average reduction
+                    #
                     t = np.divide(self.profiles[x],self.pcounts[x])
-                    t = np.multiply(t,0.3)
+
+                    #
+                    # Multiply by 0.1
+                    #
+                    t = np.multiply(t,0.1)
+
+                    #
+                    # Start building up (mostly) "fresh"
+                    #  profile
+                    #
                     self.profiles[x] = np.array(t)
                     self.pcounts[x] = np.array([1.0]*self.plen)
+
                 self.subseq += 1
         #
         # Dump the accumulating JSON array
@@ -285,12 +369,39 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
     def work(self, input_items, output_items):
         """Do dedispersion/folding"""
+
+        #
+        # Call it 'q' just so we don't have to use
+        #  'input_items[0]' everywhere.
+        #
         q = input_items[0]
         l = len(q)
+
+        #
+        # Record the arrival of a bouncing baby first sample
+        #
+        # This is for the benefit of the header writer, to
+        #  record a sub-1-second accurate MJD estimate for
+        #  the dataset.
+        #
+        # We make a half-hearted attempt to adjust for the number of
+        #  samples in the buffer and work backwards.
+        #
         if (self.first_sample == None):
-            self.first_sample = time.time()
+            self.first_sample = time.time()-(len(q)*self.sper)
+
+        #
+        # We deal with data in "chunks"
+        #
+        # That are self.flen--the filterbank size
+        #
         for i in range(int(l/self.flen)):
+            #
+            # To make the index expression not quite so
+            #  agonizing.
+            #
             bndx = i*self.flen
+
             #
             # Do delay/dedispersion logic
             #
@@ -298,6 +409,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #  to determine which filterbank channels get to particpate
             #  in the sum.  While a channel is "delayed" they don't get
             #  to participate.
+            #
+            # When we've hit "self.maxdelay", there are no more entries
+            #  in the matrix, and nothing is being delayed
             #
             if (self.delaycount < self.maxdelay):
                 outvec = np.multiply(q[bndx:bndx+self.flen],self.delaymap[self.delaycount])
@@ -310,10 +424,15 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
 
+            #
+            # Only one thing uses this at the moment, but future stuff
+            #
             self.outer_cnt += 1
 
             #
-            # 4-point median filter
+            #  Median filter
+            #
+            # self.MEDIANSIZE in length
             #
             self.mbuf[self.mcnt] = outval
             self.mcnt += 1
@@ -322,13 +441,14 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             # Time to reset mcnt, and "fall" to the
             #   lower half of this loop
             #
-            if (self.mcnt >= 4):
+            if (self.mcnt >= self.MEDIANSIZE):
                 self.mcnt = 0
             else:
                 continue
 
             #
-            # Compute the median
+            # Compute the median now that we have enough
+            #  samples.
             #
             outval = np.median(self.mbuf)
 
@@ -345,14 +465,20 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #  the set_thresh() function coming out of the flow-graph
             #
             # If our sample exceeds this value by a factor of 2.5 or
-            #  more (5dB in power), replace it with a randomly-dithered
+            #  more (~4dB in power), replace it with a randomly-dithered
             #  version of the average
+            #
+            # We don't expect this to happen very often, so the expense
+            #  of calling random.uniform() shouldn't affect performance
+            #  very much.  If this IS happening a lot, then the passband is
+            #  probably not that useful for pulsars...
+            #
             #
             if (self.outer_cnt > self.thrcount and outval > (self.thresh*2.5)):
                 outval = self.thresh*random.uniform(0.98,1.02)
 
             #
-            # At this point, our sample rate is reduced x4
+            # At this point, our sample rate is reduced by self.MEDIANSIZE
             #
             #
             # Outval now contains a single de-dispersed, median-filtered
@@ -361,9 +487,16 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
             #
             # Increment Mission Elapsed Time
-            #  sper is the sample period coming into the folder
             #
             self.MET += 1
+
+            #
+            # Turn into floating-point sample-period representation
+            #
+            # Do this here rather than inside the loop, since it would
+            #  (maybe?) get re-computed needlessly inside the loop.
+            #
+            flmet = float(self.MET)*self.sper
 
             #
             # Determine where the current sample is to be placed in the
@@ -383,8 +516,17 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #
                 # We eliminate the central correction for binary pulsars
                 #
+                # The +0.5 arranges to round-up prior to integer truncation
+                #
 
-                z = (float(self.plen)*((float(self.MET)*self.sper)/self.periods[x])) + 0.5
+                #z = (float(self.plen)*(flmet/self.periods[x])) + 0.5
+                
+                #
+                # We eliminate a divide here, by noticing that self.plen and
+                #  self.periods[x] are constant, so can be combined, using
+                #  the pax[] array.
+                #
+                z = (flmet * self.pax[x]) + 0.5
 
                 #
                 # Convert that to an int, then reduce modulo number
@@ -394,8 +536,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #
                 # J0332+5434, for example, gives an optimal number
                 #   of time/phase bins of 108 but you might want to
-                #   extend that to 216 to get higher-resolution on
-                #   the pulse profile.
+                #   extend that to 216 or 432 to get higher-resolution
+                #   of the pulse profile.
                 #
                 where = int(z) % int(self.plen)
 
@@ -411,9 +553,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             self.logcount -= 1
 
             #
-            # If time to log, the output is the reduced-by-counts
-            #  value of the profile, plus a plethora of housekeeping
-            #  info.
+            # If time to log
             #
             if (self.logcount <= 0):
                 self.do_logging()
