@@ -53,9 +53,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
         #
         # Make sure we get data in appropriately-sized chunks
-        #       
+        #
         self.set_output_multiple(fbsize*4)
-        
+
         #
         # Remember that we run at 4 times the notional filterbank
         #   sample rate.  So compute delays appropriately
@@ -80,7 +80,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.delaymap[k][j] = 1.0
           md -= 1
         self.delaycount = 0
-        
+
         if False:
             print "%d:%f" % (len(self.delaymap), self.delayincr)
             for me in self.delaymap:
@@ -168,12 +168,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.freq = freq
         self.longitude = longitude
 
-        self.randlist = []
-        for i in range(0,100000):
-            self.randlist.append(random.randint(0,1))
-        self.nrand = len(self.randlist)
-        self.randcnt = 0
-
+        #
+        # Sub-integration management
+        #
         self.subint = subint
         self.subtimer = self.subint
         self.subseq = 0
@@ -184,12 +181,28 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.mbuf = [0.0]*4
         self.mcnt = 0
 
+        #
+        # Record time-of-day of first sample
+        #
         self.first_sample = None
 
+        #
+        # Housekeeping counters for both "outer" (top half) and
+        #   "inner" (botto half) of epoch folder.
+        #
         self.outer_cnt = 0
         self.inner_cnt = 0
 
+        #
+        # Strong impulse removal threshold/3
+        #
         self.thresh = thresh
+
+        #
+        # We don't do the threshold comparison until
+        #  we've run for a while--to allow the averaging
+        #  in the flow-graph to settle.
+        #
         self.thrcount = int(fbrate*4*5)
 
     def get_profile(self):
@@ -204,6 +217,72 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     def first_sample_time(self):
         return self.first_sample
 
+    #
+    # Logging into our friend the ever-growing JSON buffer
+    #
+    def do_logging(self):
+        outputs = []
+        for x in range(self.nprofiles):
+            outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
+        d = {}
+        t = time.gmtime()
+        d["sampletime"] = self.sper
+        d["samplerate"] = 1.0/self.sper
+        d["freq"] = self.freq
+        d["bw"] = self.bw
+        d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,
+            t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
+        d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
+        d["sequence"] = self.sequence
+        d["subseq"] = self.subseq
+
+        #
+        # Construct the profiles we're going to put in the .json dict
+        #  along with a bit of housekeeping information per profile
+        #
+        profiles = []
+        for x in range(self.nprofiles):
+            pd = {}
+            pd["profile"] = list(outputs[x])
+            pd["p0"] = self.periods[x]
+            pd["shift"] = self.shifts[x]
+            profiles.append(pd)
+        d["profiles"] = profiles
+
+        #
+        # We keep a running record, and dump the entire record
+        #   every LOGTIME.
+        #
+        self.jsonlets.append(d)
+
+        #
+        # Handle "subint" sub-integrations
+        #
+        if (self.subint > 0):
+            self.subtimer -= 1
+            if (self.subtimer <= 0):
+                self.subtimer = self.subint
+
+                #
+                # We reduce the current profile almost to nothing,
+                #  so that the "new" sub-int has something to chain
+                #  from
+                #
+                for x in range(self.nprofiles):
+                    t = np.divide(self.profiles[x],self.pcounts[x])
+                    t = np.multiply(t,0.3)
+                    self.profiles[x] = np.array(t)
+                    self.pcounts[x] = np.array([1.0]*self.plen)
+                self.subseq += 1
+        #
+        # Dump the accumulating JSON array
+        #  (well, actually, an array of dictionaries that
+        #   will get JSON encoded.)
+        #
+        fp = open(self.fname, "w")
+        fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
+        fp.close()
+
     def work(self, input_items, output_items):
         """Do dedispersion/folding"""
         q = input_items[0]
@@ -215,13 +294,22 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             # Do delay/dedispersion logic
             #
+            # We just use numpy to use entries in the delay matrix
+            #  to determine which filterbank channels get to particpate
+            #  in the sum.  While a channel is "delayed" they don't get
+            #  to participate.
+            #
             if (self.delaycount < self.maxdelay):
                 outvec = np.multiply(q[bndx:bndx+self.flen],self.delaymap[self.delaycount])
                 outval = math.fsum(outvec)
                 self.delaycount += 1
+            #
+            # When all the delay is dealt with, every channel gets
+            #   to contribute to the sum
+            #
             else:
                 outval = math.fsum(q[bndx:bndx+self.flen])
-            
+
             self.outer_cnt += 1
 
             #
@@ -229,7 +317,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             self.mbuf[self.mcnt] = outval
             self.mcnt += 1
-            
+
             #
             # Time to reset mcnt, and "fall" to the
             #   lower half of this loop
@@ -255,7 +343,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             # self.thresh contains a longer-term average of the signal
             #  coming in to the folder, and is updated at 1Hz through
             #  the set_thresh() function coming out of the flow-graph
-            # 
+            #
             # If our sample exceeds this value by a factor of 2.5 or
             #  more (5dB in power), replace it with a randomly-dithered
             #  version of the average
@@ -328,68 +416,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #  info.
             #
             if (self.logcount <= 0):
-                outputs = []
-                for x in range(self.nprofiles):
-                    outputs.append(np.divide(self.profiles[x],self.pcounts[x]))
-                d = {}
-                t = time.gmtime()
-                d["sampletime"] = self.sper
-                d["samplerate"] = 1.0/self.sper
-                d["freq"] = self.freq
-                d["bw"] = self.bw
-                d["time"] = "%04d%02d%02d-%02d:%02d:%02d" % (t.tm_year,
-                    t.tm_mon, t.tm_mday, t.tm_hour, t.tm_min, t.tm_sec)
-                d["lmst"] = cur_sidereal(self.longitude).replace(",",":")
-                d["sequence"] = self.sequence
-                d["subseq"] = self.subseq
-
-                #
-                # Construct the profiles we're going to put in the .json dict
-                #  along with a bit of housekeeping information per profile
-                #
-                profiles = []
-                for x in range(self.nprofiles):
-                    pd = {}
-                    pd["profile"] = list(outputs[x])
-                    pd["p0"] = self.periods[x]
-                    pd["shift"] = self.shifts[x]
-                    profiles.append(pd)
-                d["profiles"] = profiles
-
-                #
-                # We keep a running record, and dump the entire record
-                #   every LOGTIME.
-                #
-                self.jsonlets.append(d)
+                self.do_logging()
+                self.sequence += 1
                 self.logcount = self.INTERVAL
-
-                #
-                # Handle "subint" sub-integrations
-                #
-                if (self.subint > 0):
-                    self.subtimer -= 1
-                    if (self.subtimer <= 0):
-                        self.subtimer = self.subint
-
-                        #
-                        # We reduce the current profile almost to nothing,
-                        #  so that the "new" sub-int has something to chain
-                        #  from
-                        #
-                        for x in range(self.nprofiles):
-                            t = np.divide(self.profiles[x],self.pcounts[x])
-                            t = np.multiply(t,0.3)
-                            self.profiles[x] = np.array(t)
-                            self.pcounts[x] = np.array([1.0]*self.plen)
-                        self.subseq += 1
-                #
-                # Dump the accumulating JSON array
-                #  (well, actually, an array of dictionaries that
-                #   will get JSON encoded.)
-                #
-                fp = open(self.fname, "w")
-                fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
-                fp.close()
 
 
         return len(q)
