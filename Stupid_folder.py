@@ -87,7 +87,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         for k in range(self.maxdelay):
           for j in range(fbsize):
             if ((md - (self.delayincr*j)) <= 0):
-                self.delaymap[k][j] = 1.0
+                self.delaymap[k][(fbsize-1)-j] = 1.0
           md -= 1
         self.delaycount = 0
 
@@ -127,7 +127,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.profiles = np.zeros((len(self.shifts),tbins))
         self.pcounts = np.zeros((len(self.shifts),tbins))
         self.nprofiles = len(self.profiles)
-        
+
         #
         # The profile length as phase bins
         #
@@ -152,7 +152,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         self.pax = []
         for period in self.periods:
-			self.pax.append(float(self.plen)/period)
+            self.pax.append(float(self.plen)/period)
         #
         # Input sample period (UNRELATED TO PULSAR PERIOD)
         #
@@ -192,6 +192,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         self.INTERVAL = int(fbrate*interval)
         self.logcount = self.INTERVAL
+        self.logready = False
 
         #
         # The main list/array that will be written as JSON, and appended to
@@ -260,7 +261,29 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         return l
 
     #
-    # So the header-writer get get the first sample time.
+    # On slower disks, as the jsonlets array gets bigger, the work function
+    #  can stall long enough to cause over-runs.  Soooooo
+    #  we move the actual file-writing out of the work function and into
+    #  this function that is polled.
+    #
+    # There's a simple semaphore than indicates that the jsonlets array is
+    #  ready to be dumped.
+    #
+    def flush_logfile(self):
+        if (self.logready == True):
+            #
+            # Dump the accumulating JSON array
+            #  (well, actually, an array of dictionaries that
+            #   will get JSON encoded.)
+            #
+            fp = open(self.fname, "w")
+            fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
+            fp.close()
+            self.logready = False
+        return True
+
+    #
+    # So the header-writer can get the first-sample time.
     #
     def first_sample_time(self):
         return self.first_sample
@@ -270,6 +293,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     #
     def do_logging(self):
 
+        #
+        # To make sure the file-dumper doesn't activate in the middle
+        #
+        self.logready = False
+        
         #
         # First, produce a list of averaged profiles
         #  remember we keep both an accumulator and
@@ -358,14 +386,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     self.pcounts[x] = np.array([1.0]*self.plen)
 
                 self.subseq += 1
+
         #
-        # Dump the accumulating JSON array
-        #  (well, actually, an array of dictionaries that
-        #   will get JSON encoded.)
+        # Raise a simple semaphore
         #
-        fp = open(self.fname, "w")
-        fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
-        fp.close()
+        self.logready = True
 
     def work(self, input_items, output_items):
         """Do dedispersion/folding"""
@@ -520,7 +545,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #
 
                 #z = (float(self.plen)*(flmet/self.periods[x])) + 0.5
-                
+
                 #
                 # We eliminate a divide here, by noticing that self.plen and
                 #  self.periods[x] are constant, so can be combined, using
@@ -562,4 +587,3 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 
 
         return len(q)
-
