@@ -1025,7 +1025,7 @@ Used only for file-naming right now
     </param>
     <param>
       <key>bwid</key>
-      <value>2560000.0</value>
+      <value>samp_rate</value>
     </param>
     <param>
       <key>_source_code</key>
@@ -1650,7 +1650,7 @@ UP AT SOME POINT
     </param>
     <param>
       <key>frequ</key>
-      <value>408000000.0</value>
+      <value>skyf</value>
     </param>
     <param>
       <key>_coordinate</key>
