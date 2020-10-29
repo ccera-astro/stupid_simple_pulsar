@@ -261,8 +261,22 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #  (well, actually, an array of dictionaries that
             #   will get JSON encoded.)
             #
+            chunk = int(500e6)
             fp = open(jsfilename, "w")
-            fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
+            jstr = json.dumps(self.jsonlets, indent=4)
+            if (len(jstr) < chunk):
+                fp.write(jstr)
+            else:
+                chunks = int(len(jstr)/chunk)
+                remainder = len(jstr) % chunk
+                base = 0
+                for k in range(chunks):
+                    fp.write(jstr[base:base+chunk])
+                    base += chunk
+                    time.sleep(0.250)
+                fp.write(jstr[base:])
+                
+            
             fp.close()
             self.logready = False
         return True
@@ -561,18 +575,18 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.pcounts[x][where] += 1.0
 
             if (self.housekeeping == True):
-				#
-				# Decrement the log counter
-				#
-				self.logcount -= 1
+                #
+                # Decrement the log counter
+                #
+                self.logcount -= 1
 
-				#
-				# If time to log
-				#
-				if (self.logcount <= 0):
-					self.do_logging()
-					self.sequence += 1
-					self.logcount = self.INTERVAL
+                #
+                # If time to log
+                #
+                if (self.logcount <= 0):
+                    self.do_logging()
+                    self.sequence += 1
+                    self.logcount = self.INTERVAL
 
 
         return len(q)
