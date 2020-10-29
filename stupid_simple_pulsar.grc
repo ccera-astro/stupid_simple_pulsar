@@ -447,7 +447,7 @@ FOLDER
     </param>
     <param>
       <key>function_args</key>
-      <value></value>
+      <value>skyf,samp_rate,longitude,subint,jsfilename,int(logtime*real_fbrate/median_len)</value>
     </param>
     <param>
       <key>function_name</key>
@@ -455,7 +455,7 @@ FOLDER
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1240, 1056)</value>
+      <value>(1216, 1064)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -471,7 +471,7 @@ FOLDER
     </param>
     <param>
       <key>poll_rate</key>
-      <value>1.0/5.0</value>
+      <value>1.0</value>
     </param>
   </block>
   <block>
@@ -784,7 +784,7 @@ Used only for file-naming right now
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1120, 1068)</value>
+      <value>(1080, 1180)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -1021,11 +1021,7 @@ Used only for file-naming right now
     </param>
     <param>
       <key>_io_cache</key>
-      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '0.0085'), ('period', '0.71452'), ('filename', "'/dev/null'"), ('fbrate', '2500.0'), ('tbins', '250'), ('interval', '30'), ('tppms', "'0.0'"), ('frequ', '408000000.0'), ('bwid', '2560000.0'), ('longit', '-75.984'), ('subints', '0'), ('thresh', '300000.0'), ('mlen', '4')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['thresh'])</value>
-    </param>
-    <param>
-      <key>bwid</key>
-      <value>samp_rate</value>
+      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '0.0085'), ('period', '0.71452'), ('fbrate', '2500.0'), ('tbins', '250'), ('tppms', "'0.0'"), ('thresh', '300000.0'), ('mlen', '4')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['thresh'])</value>
     </param>
     <param>
       <key>_source_code</key>
@@ -1074,9 +1070,8 @@ def cur_sidereal(longitude):
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=0.0085,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
-        tppms="0.0",frequ=408.0e6,bwid=2.56e6,
-        longit=-75.984,subints=0,thresh=1.0e5*3.0,mlen=4):  # only default arguments here
+    def __init__(self, fbsize=16,smear=0.0085,period=0.714520,fbrate=2500.0,tbins=250,
+        tppms="0.0", thresh=1.0e5*3.0,mlen=4):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -1205,11 +1200,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.MET = 0
 
         #
-        # Set output filename
-        #
-        self.fname = filename
-
-        #
         # Initialize the profile logging outer main sequence number
         #
         self.sequence = 0
@@ -1221,8 +1211,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #  folder is 'fbrate'.  ONLY the 'top half' (dedispersion)
         #  "sees" the higher (self.MEDIANSIZE) rate.
         #
-        self.INTERVAL = int(fbrate*interval)
-        self.logcount = self.INTERVAL
+        self.INTERVAL = None
+        self.logcount = None
         self.logready = False
 
         #
@@ -1232,19 +1222,19 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.jsonlets = []
 
         #
-        # Some housekeeping numboids
-        #
-        self.bw = bwid
-        self.freq = frequ
-        self.longitude = longit
-
-        #
         # Sub-integration management
         #
-        self.subint = subints
-        self.subtimer = self.subint
+        self.subint = None
+        self.subtimer = None
         self.subseq = 0
 
+        #
+        # Housekeeping
+        #
+        self.longitude = None
+        self.bw = None
+        self.freq = None
+        
         #
         # Median filter buffer
         #
@@ -1300,14 +1290,28 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     # There's a simple semaphore than indicates that the jsonlets array is
     #  ready to be dumped.
     #
-    def flush_logfile(self):
+    def flush_logfile(self,skyf,samp_rate,longitude,subint,jsfilename,interval):
+        
+        self.freq = skyf
+        self.bw = samp_rate
+        self.longitude = longitude
+        
+        if (self.INTERVAL == None):
+            self.INTERVAL = interval
+            self.logcount = self.INTERVAL
+            
+        if (self.subint == None):
+            self.subint = subint
+            self.subtimer = subint
+            self.subseq = 0
+            
         if (self.logready == True):
             #
             # Dump the accumulating JSON array
             #  (well, actually, an array of dictionaries that
             #   will get JSON encoded.)
             #
-            fp = open(self.fname, "w")
+            fp = open(jsfilename, "w")
             fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
             fp.close()
             self.logready = False
@@ -1323,6 +1327,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     # Logging into our friend the ever-growing JSON buffer
     #
     def do_logging(self):
+        
+        if (self.freq == None or self.longitude == None or self.bw == None):
+            return
 
         #
         # To make sure the file-dumper doesn't activate in the middle
@@ -1383,7 +1390,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # Handle "subint" sub-integrations
         #
-        if (self.subint &gt; 0):
+        if (self.subint != None and self.subint &gt; 0):
             self.subtimer -= 1
 
             #
@@ -1606,12 +1613,13 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             # Decrement the log counter
             #
-            self.logcount -= 1
+            if (self.logcount != None):
+				self.logcount -= 1
 
             #
             # If time to log
             #
-            if (self.logcount &lt;= 0):
+            if (self.logcount != None and self.logcount &lt;= 0):
                 self.do_logging()
                 self.sequence += 1
                 self.logcount = self.INTERVAL
@@ -1645,14 +1653,6 @@ UP AT SOME POINT
       <value>fbsize</value>
     </param>
     <param>
-      <key>filename</key>
-      <value>jsfilename</value>
-    </param>
-    <param>
-      <key>frequ</key>
-      <value>skyf</value>
-    </param>
-    <param>
       <key>_coordinate</key>
       <value>(1600, 424)</value>
     </param>
@@ -1665,14 +1665,6 @@ UP AT SOME POINT
       <value>Stupid_folder</value>
     </param>
     <param>
-      <key>interval</key>
-      <value>logtime</value>
-    </param>
-    <param>
-      <key>longit</key>
-      <value>-75.984</value>
-    </param>
-    <param>
       <key>mlen</key>
       <value>median_len</value>
     </param>
@@ -1683,10 +1675,6 @@ UP AT SOME POINT
     <param>
       <key>smear</key>
       <value>smear</value>
-    </param>
-    <param>
-      <key>subints</key>
-      <value>0</value>
     </param>
     <param>
       <key>tbins</key>
@@ -8288,7 +8276,7 @@ THE 'profile_display' APP.
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1120, 1212)</value>
+      <value>(1432, 1284)</value>
     </param>
     <param>
       <key>_rotation</key>

@@ -43,9 +43,8 @@ def cur_sidereal(longitude):
 class blk(gr.sync_block):  # other base classes are basic_block, decim_block, interp_block
     """A pulsar folder/de-dispersion block"""
 
-    def __init__(self, fbsize=16,smear=0.0085,period=0.714520,filename='/dev/null',fbrate=2500.0,tbins=250,interval=30,
-        tppms="0.0",frequ=408.0e6,bwid=2.56e6,
-        longit=-75.984,subints=0,thresh=1.0e5*3.0,mlen=4):  # only default arguments here
+    def __init__(self, fbsize=16,smear=0.0085,period=0.714520,fbrate=2500.0,tbins=250,
+        tppms="0.0", thresh=1.0e5*3.0,mlen=4):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -174,11 +173,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.MET = 0
 
         #
-        # Set output filename
-        #
-        self.fname = filename
-
-        #
         # Initialize the profile logging outer main sequence number
         #
         self.sequence = 0
@@ -190,8 +184,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #  folder is 'fbrate'.  ONLY the 'top half' (dedispersion)
         #  "sees" the higher (self.MEDIANSIZE) rate.
         #
-        self.INTERVAL = int(fbrate*interval)
-        self.logcount = self.INTERVAL
+        self.INTERVAL = None
+        self.logcount = None
         self.logready = False
 
         #
@@ -201,19 +195,19 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.jsonlets = []
 
         #
-        # Some housekeeping numboids
-        #
-        self.bw = bwid
-        self.freq = frequ
-        self.longitude = longit
-
-        #
         # Sub-integration management
         #
-        self.subint = subints
-        self.subtimer = self.subint
+        self.subint = None
+        self.subtimer = None
         self.subseq = 0
 
+        #
+        # Housekeeping
+        #
+        self.longitude = None
+        self.bw = None
+        self.freq = None
+        
         #
         # Median filter buffer
         #
@@ -269,14 +263,28 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     # There's a simple semaphore than indicates that the jsonlets array is
     #  ready to be dumped.
     #
-    def flush_logfile(self):
+    def flush_logfile(self,skyf,samp_rate,longitude,subint,jsfilename,interval):
+        
+        self.freq = skyf
+        self.bw = samp_rate
+        self.longitude = longitude
+        
+        if (self.INTERVAL == None):
+            self.INTERVAL = interval
+            self.logcount = self.INTERVAL
+            
+        if (self.subint == None):
+            self.subint = subint
+            self.subtimer = subint
+            self.subseq = 0
+            
         if (self.logready == True):
             #
             # Dump the accumulating JSON array
             #  (well, actually, an array of dictionaries that
             #   will get JSON encoded.)
             #
-            fp = open(self.fname, "w")
+            fp = open(jsfilename, "w")
             fp.write(json.dumps(self.jsonlets, indent=4)+"\n")
             fp.close()
             self.logready = False
@@ -292,6 +300,9 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     # Logging into our friend the ever-growing JSON buffer
     #
     def do_logging(self):
+        
+        if (self.freq == None or self.longitude == None or self.bw == None):
+            return
 
         #
         # To make sure the file-dumper doesn't activate in the middle
@@ -352,7 +363,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # Handle "subint" sub-integrations
         #
-        if (self.subint > 0):
+        if (self.subint != None and self.subint > 0):
             self.subtimer -= 1
 
             #
@@ -575,12 +586,13 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             # Decrement the log counter
             #
-            self.logcount -= 1
+            if (self.logcount != None):
+				self.logcount -= 1
 
             #
             # If time to log
             #
-            if (self.logcount <= 0):
+            if (self.logcount != None and self.logcount <= 0):
                 self.do_logging()
                 self.sequence += 1
                 self.logcount = self.INTERVAL
