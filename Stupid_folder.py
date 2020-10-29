@@ -176,37 +176,14 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # Initialize the profile logging outer main sequence number
         #
         self.sequence = 0
-
-        #
-        # The logging interval
-        #
-        # Again, the rate as seen by the "bottom half" of the
-        #  folder is 'fbrate'.  ONLY the 'top half' (dedispersion)
-        #  "sees" the higher (self.MEDIANSIZE) rate.
-        #
-        self.INTERVAL = None
-        self.logcount = None
-        self.logready = False
+        
+        self.housekeeping = False
 
         #
         # The main list/array that will be written as JSON, and appended to
         #  throughout the run
         #
         self.jsonlets = []
-
-        #
-        # Sub-integration management
-        #
-        self.subint = None
-        self.subtimer = None
-        self.subseq = 0
-
-        #
-        # Housekeeping
-        #
-        self.longitude = None
-        self.bw = None
-        self.freq = None
         
         #
         # Median filter buffer
@@ -269,14 +246,14 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.bw = samp_rate
         self.longitude = longitude
         
-        if (self.INTERVAL == None):
+        if (self.housekeeping == False):
             self.INTERVAL = interval
             self.logcount = self.INTERVAL
-            
-        if (self.subint == None):
             self.subint = subint
             self.subtimer = subint
             self.subseq = 0
+            self.housekeeping = True
+            self.logready = False
             
         if (self.logready == True):
             #
@@ -301,7 +278,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     #
     def do_logging(self):
         
-        if (self.freq == None or self.longitude == None or self.bw == None):
+        if self.housekeeping == False:
             return
 
         #
@@ -583,19 +560,19 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 self.profiles[x][where] += outval
                 self.pcounts[x][where] += 1.0
 
-            #
-            # Decrement the log counter
-            #
-            if (self.logcount != None):
+            if (self.housekeeping == True):
+				#
+				# Decrement the log counter
+				#
 				self.logcount -= 1
 
-            #
-            # If time to log
-            #
-            if (self.logcount != None and self.logcount <= 0):
-                self.do_logging()
-                self.sequence += 1
-                self.logcount = self.INTERVAL
+				#
+				# If time to log
+				#
+				if (self.logcount <= 0):
+					self.do_logging()
+					self.sequence += 1
+					self.logcount = self.INTERVAL
 
 
         return len(q)
