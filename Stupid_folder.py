@@ -90,10 +90,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
           md -= 1
         self.delaycount = 0
 
-        if False:
-            print "%d:%f" % (len(self.delaymap), self.delayincr)
-            for me in self.delaymap:
-                print me
         #
         # Needed in a few places
         #
