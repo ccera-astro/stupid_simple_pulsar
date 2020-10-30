@@ -44,7 +44,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     """A pulsar folder/de-dispersion block"""
 
     def __init__(self, fbsize=16,smear=0.0085,period=0.714520,fbrate=2500.0,tbins=250,
-        tppms="0.0", thresh=1.0e5*3.0,mlen=4):  # only default arguments here
+        tppms="0.0", thresh=1.0e6,mlen=4):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -264,8 +264,18 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             chunk = int(500e6)
             fp = open(jsfilename, "w")
             jstr = json.dumps(self.jsonlets, indent=4)
+            
+            #
+            # If it's "svelt", dump the whole thing immediately
+            #
             if (len(jstr) < chunk):
                 fp.write(jstr)
+                
+            #
+            # Dribble it out with a bit of a pause--on some systems,
+            #   our JSON writing interferes with our main .FIL writing
+            #   resulting in over-runs, even at modest sample rates. :(
+            #
             else:
                 chunks = int(len(jstr)/chunk)
                 remainder = len(jstr) % chunk
