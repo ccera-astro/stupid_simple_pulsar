@@ -5870,7 +5870,7 @@ rfi_stable = {
 # name : timer-init current-state statelist function state-data
     "rfi": [10,  0, [INIT,PROCESSING], st_do_rfi, rfi_dict],
     "smoothing": [2,  0, [INIT,WAITING,WAITING,READY,PROCESSING], st_do_smoothing, smoothing_dict],
-    "logging" : [15,  0, [COUNTING], st_do_rfilog, uber_dict]
+    "logging" : [60,  0, [COUNTING], st_do_rfilog, uber_dict]
 }
 st_counter = 0.0
 
