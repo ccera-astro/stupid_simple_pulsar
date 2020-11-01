@@ -146,8 +146,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         # Slightly accelerate math in the folding loop
         #
         self.pax = []
-        for period in self.periods:
-            self.pax.append(float(self.plen)/period)
+        for per in self.periods:
+            self.pax.append(float(self.plen)/per)
         #
         # Input sample period (UNRELATED TO PULSAR PERIOD)
         #
@@ -169,18 +169,11 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.MET = 0
 
         #
-        # Initialize the profile logging outer main sequence number
-        #
-        self.sequence = 0
-        
+        # Housekeeping variable are initialized elsewhere in the
+        #  flush_logfile() method
+        #2
         self.housekeeping = False
 
-        #
-        # The main list/array that will be written as JSON, and appended to
-        #  throughout the run
-        #
-        self.jsonlets = []
-        
         #
         # Median filter buffer
         #
@@ -250,6 +243,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             self.subseq = 0
             self.housekeeping = True
             self.logready = False
+            self.sequence = 0
+            self.jsonlets = []
             
         if (self.logready == True):
             #
@@ -422,7 +417,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         if (self.first_sample == None):
             self.first_sample = time.time()-(len(q)*self.sper)
-
+            
         #
         # We deal with data in "chunks"
         #
@@ -559,7 +554,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #  self.periods[x] are constant, so can be combined, using
                 #  the pax[] array.
                 #
-                z = (flmet * self.pax[x]) + 0.5
+                z = (flmet * self.pax[x]) #+ 0.5
 
                 #
                 # Convert that to an int, then reduce modulo number
