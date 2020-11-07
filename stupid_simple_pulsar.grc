@@ -1101,21 +1101,30 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.delayincr += self.ddelay/float(fbsize)
         self.delayincr /= 2.0
         self.maxdelay = int(round(self.delayincr*(fbsize-1)))
-        self.delaymap = np.zeros((self.maxdelay, fbsize))
+        self.delayincr = int(self.delayincr)
+        
+        
+        #
+        # Create a set of ringbuffers to implement delay logic
+        #
+        # We make them just a bit bigger than the maximum delay
+        #
+        self.delayrings = np.zeros((fbsize, self.maxdelay+5))
+        self.delaylen = len(self.delayrings[0])
+        self.delayptr = 0
 
+        
         #
-        # We create a matrix/map that allows us to just
-        #  multiply the input filterbank channel either
-        #  by 0 (this channel is still delayed) or
-        #  by 1 (this channel is no longer delayed)
+        # This will *slightly* improve index-calculation performance in the
+        #  work function.
         #
-        md = self.maxdelay-1
-        for k in range(self.maxdelay):
-          for j in range(fbsize):
-            if ((md - (self.delayincr*j)) &lt;= 0):
-                self.delaymap[k][(fbsize-1)-j] = 1.0
-          md -= 1
-        self.delaycount = 0
+        self.delaymap = [[0 for i in range(self.delaylen)] for j in range(self.delaylen)]
+        for x in range(self.delaylen):
+            for y in range(self.delaylen):
+                dndx = x - y
+                if (dndx &lt; 0):
+                    dndx = self.delaylen + dndx
+                self.delaymap[x][y] = int(dndx)
 
         #
         # Needed in a few places
@@ -1460,25 +1469,39 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             # Do delay/dedispersion logic
             #
-            # We just use numpy to use entries in the delay matrix
-            #  to determine which filterbank channels get to particpate
-            #  in the sum.  While a channel is "delayed" they don't get
-            #  to participate.
             #
-            # When we've hit "self.maxdelay", there are no more entries
-            #  in the matrix, and nothing is being delayed
+            outval = 0.0
+            delay = self.maxdelay
             #
-            if (self.delaycount &lt; self.maxdelay):
-                outvec = np.multiply(q[bndx:bndx+self.flen],self.delaymap[self.delaycount])
-                outval = math.fsum(outvec)
-                self.delaycount += 1
+            # For each filterbank position
             #
-            # When all the delay is dealt with, every channel gets
-            #   to contribute to the sum
+            # Use a ring-buffer based delay mechanism
             #
-            else:
-                outval = math.fsum(q[bndx:bndx+self.flen])
+            for x in range(self.flen):
+                #
+                # Place input into ring buffer at current position
+                #  (that will be the same for each channel in the FB)
+                #
+                self.delayrings[x][self.delayptr] = q[bndx+x]
+                
+                #
+                # Determine delayed ring buffer position
+                #  This will be *different* for each channel
+                #
+                dndx = self.delaymap[self.delayptr][delay]
 
+                #
+                # Add in delayed data
+                #
+                outval += self.delayrings[x][dndx]
+                
+                #
+                # Move to next delay value
+                #
+                delay -= self.delayincr
+
+            self.delayptr = (self.delayptr + 1) % self.delaylen
+            
             #
             # Only one thing uses this at the moment, but future stuff
             #
@@ -1581,7 +1604,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 #  self.periods[x] are constant, so can be combined, using
                 #  the pax[] array.
                 #
-                z = (flmet * self.pax[x]) #+ 0.5
+                z = (flmet * self.pax[x]) + 0.5
 
                 #
                 # Convert that to an int, then reduce modulo number
