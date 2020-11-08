@@ -399,23 +399,11 @@ def find_rate(srate,fbsize,target):
     #
     # Try to find some other rate
     #
-    # Start high
-    #
-    for trial in numpy.arange(10000.0,30000.0,1.0):
+    for trial in numpy.arange(1250.0,4000.0,1.0):
         decim = float(brate)/float(trial)
         if (decim == float(int(decim))):
-            if (float(int(trial/4.0)) == trial/4.0):
-                return trial
+            return trial
     
-    #
-    # Compromise to lower rates if necessary
-    #       
-    for trial in numpy.arange(5000.0,10000.0,1.0):
-        decim = float(brate)/float(trial)
-        if (decim == float(int(decim))):
-            if (float(int(trial/4.0)) == trial/4.0):
-                return trial
-
 
     rate = float(target)
     decim = int(srate/fbsize/rate)
@@ -487,9 +475,9 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
         return None
 
 
-	#
-	# Haven't done the header yet
-	#
+    #
+    # Haven't done the header yet
+    #
     if (hdr_done == False):
 
         fp = open(outfile, "wb")

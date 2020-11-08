@@ -44,7 +44,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     """A pulsar folder/de-dispersion block"""
 
     def __init__(self, fbsize=16,smear=0.0085,period=0.714520,fbrate=2500.0,tbins=250,
-        tppms="0.0", thresh=1.0e6,mlen=4):  # only default arguments here
+        tppms="0.0", thresh=1.0e6):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -53,23 +53,16 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             out_sig=None
         )
 
-        #
-        # Various bits and pieces *know* what size the median filter is
-        #  This could change at some point, but for now we set it here, and everything below
-        #  that needs to "know* uses this
-        #
-        self.MEDIANSIZE = mlen
 
         #
         # Make sure we get data in appropriately-sized chunks
         #
-        self.set_output_multiple(fbsize*self.MEDIANSIZE)
+        self.set_output_multiple(fbsize)
 
         #
-        # Remember that we run at self.MEDIANSIZE times the notional filterbank
-        #   sample rate.  So compute delays appropriately
+        # Compute delays for de-dispersion
         #
-        self.ddelay = smear * float(fbrate*self.MEDIANSIZE)
+        self.ddelay = smear * float(fbrate)
         self.delayincr = self.ddelay/float(fbsize-1.0)
         self.delayincr += self.ddelay/float(fbsize)
         self.delayincr /= 2.0
@@ -160,10 +153,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # Input sample period (UNRELATED TO PULSAR PERIOD)
         #
-        # This is correct because we only run the "top half" of the folder
-        #  at the self.MEDIANSIZE rate--but after the median filter
-        #  this rate is correct.
-        #
         self.sper = 1.0/float(fbrate)
 
         #
@@ -182,12 +171,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #  flush_logfile() method
         #2
         self.housekeeping = False
-
-        #
-        # Median filter buffer
-        #
-        self.mbuf = [0.0]*self.MEDIANSIZE
-        self.mcnt = 0
 
         #
         # To record time-of-day of first sample
@@ -480,28 +463,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             self.outer_cnt += 1
 
-            #
-            #  Median filter
-            #
-            # self.MEDIANSIZE in length
-            #
-            self.mbuf[self.mcnt] = outval
-            self.mcnt += 1
-
-            #
-            # Time to reset mcnt, and "fall" to the
-            #   lower half of this loop
-            #
-            if (self.mcnt >= self.MEDIANSIZE):
-                self.mcnt = 0
-            else:
-                continue
-
-            #
-            # Compute the median now that we have enough
-            #  samples.
-            #
-            outval = np.median(self.mbuf)
 
             #
             # Do gross impulse removal -- reduce to average
@@ -529,11 +490,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 outval = self.thresh*random.uniform(0.98,1.02)
 
             #
-            # At this point, our sample rate is reduced by self.MEDIANSIZE
-            #
-            #
-            # Outval now contains a single de-dispersed, median-filtered
-            #   strong-impulse-removed power sample
+            # Outval now contains a single de-dispersed
+            #  impulse-removed sample
             #
 
             #

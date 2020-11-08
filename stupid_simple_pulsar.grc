@@ -447,7 +447,7 @@ FOLDER
     </param>
     <param>
       <key>function_args</key>
-      <value>skyf,samp_rate,longitude,subint,jsfilename,int(logtime*real_fbrate/median_len)</value>
+      <value>skyf,samp_rate,longitude,subint,jsfilename,int(logtime*real_fbrate)</value>
     </param>
     <param>
       <key>function_name</key>
@@ -533,7 +533,7 @@ FLAG
     </param>
     <param>
       <key>value</key>
-      <value>st_psr_helper.build_header_info(hfilename,pname,ra,dec,skyf,samp_rate,real_fbrate/median_len,fbsize,flout,first_poller)</value>
+      <value>st_psr_helper.build_header_info(hfilename,pname,ra,dec,skyf,samp_rate,real_fbrate,fbsize,flout,first_poller)</value>
     </param>
   </block>
   <block>
@@ -746,33 +746,6 @@ filterbank output file</value>
     <key>variable</key>
     <param>
       <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(1608, 148)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>median_len</value>
-    </param>
-    <param>
-      <key>value</key>
-      <value>4</value>
-    </param>
-  </block>
-  <block>
-    <key>variable</key>
-    <param>
-      <key>comment</key>
       <value>********************************
 Current MJD at graph start
 Used only for file-naming right now
@@ -832,7 +805,7 @@ Used only for file-naming right now
     </param>
     <param>
       <key>value</key>
-      <value>st_psr_helper.find_rate(samp_rate,fbsize,drate*median_len)</value>
+      <value>st_psr_helper.find_rate(samp_rate,fbsize,drate)</value>
     </param>
   </block>
   <block>
@@ -1021,7 +994,7 @@ Used only for file-naming right now
     </param>
     <param>
       <key>_io_cache</key>
-      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '0.0085'), ('period', '0.71452'), ('fbrate', '2500.0'), ('tbins', '250'), ('tppms', "'0.0'"), ('thresh', '1000000.0'), ('mlen', '4')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['thresh'])</value>
+      <value>('Stupid Pulsar Folder', 'blk', [('fbsize', '16'), ('smear', '0.0085'), ('period', '0.71452'), ('fbrate', '2500.0'), ('tbins', '250'), ('tppms', "'0.0'"), ('thresh', '1000000.0')], [('0', 'float', 1)], [], 'A pulsar folder/de-dispersion block', ['thresh'])</value>
     </param>
     <param>
       <key>_source_code</key>
@@ -1071,7 +1044,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
     """A pulsar folder/de-dispersion block"""
 
     def __init__(self, fbsize=16,smear=0.0085,period=0.714520,fbrate=2500.0,tbins=250,
-        tppms="0.0", thresh=1.0e6,mlen=4):  # only default arguments here
+        tppms="0.0", thresh=1.0e6):  # only default arguments here
         """arguments to this function show up as parameters in GRC"""
         gr.sync_block.__init__(
             self,
@@ -1080,23 +1053,16 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             out_sig=None
         )
 
-        #
-        # Various bits and pieces *know* what size the median filter is
-        #  This could change at some point, but for now we set it here, and everything below
-        #  that needs to "know* uses this
-        #
-        self.MEDIANSIZE = mlen
 
         #
         # Make sure we get data in appropriately-sized chunks
         #
-        self.set_output_multiple(fbsize*self.MEDIANSIZE)
+        self.set_output_multiple(fbsize)
 
         #
-        # Remember that we run at self.MEDIANSIZE times the notional filterbank
-        #   sample rate.  So compute delays appropriately
+        # Compute delays for de-dispersion
         #
-        self.ddelay = smear * float(fbrate*self.MEDIANSIZE)
+        self.ddelay = smear * float(fbrate)
         self.delayincr = self.ddelay/float(fbsize-1.0)
         self.delayincr += self.ddelay/float(fbsize)
         self.delayincr /= 2.0
@@ -1187,10 +1153,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # Input sample period (UNRELATED TO PULSAR PERIOD)
         #
-        # This is correct because we only run the "top half" of the folder
-        #  at the self.MEDIANSIZE rate--but after the median filter
-        #  this rate is correct.
-        #
         self.sper = 1.0/float(fbrate)
 
         #
@@ -1209,12 +1171,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #  flush_logfile() method
         #2
         self.housekeeping = False
-
-        #
-        # Median filter buffer
-        #
-        self.mbuf = [0.0]*self.MEDIANSIZE
-        self.mcnt = 0
 
         #
         # To record time-of-day of first sample
@@ -1507,28 +1463,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
             #
             self.outer_cnt += 1
 
-            #
-            #  Median filter
-            #
-            # self.MEDIANSIZE in length
-            #
-            self.mbuf[self.mcnt] = outval
-            self.mcnt += 1
-
-            #
-            # Time to reset mcnt, and "fall" to the
-            #   lower half of this loop
-            #
-            if (self.mcnt &gt;= self.MEDIANSIZE):
-                self.mcnt = 0
-            else:
-                continue
-
-            #
-            # Compute the median now that we have enough
-            #  samples.
-            #
-            outval = np.median(self.mbuf)
 
             #
             # Do gross impulse removal -- reduce to average
@@ -1556,11 +1490,8 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 outval = self.thresh*random.uniform(0.98,1.02)
 
             #
-            # At this point, our sample rate is reduced by self.MEDIANSIZE
-            #
-            #
-            # Outval now contains a single de-dispersed, median-filtered
-            #   strong-impulse-removed power sample
+            # Outval now contains a single de-dispersed
+            #  impulse-removed sample
             #
 
             #
@@ -1649,8 +1580,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
 EPOCH FOLDER
 PRODUCE TRIAL FOLDINGS
 APPLY DM CORRECTION
-NOTE WE OPERATE AT 4
-TIMES THE GIVEN FBRATE
 THIS SHOULD BE BROKEN
 UP AT SOME POINT
 *************************</value>
@@ -1661,7 +1590,7 @@ UP AT SOME POINT
     </param>
     <param>
       <key>fbrate</key>
-      <value>real_fbrate/float(median_len)</value>
+      <value>real_fbrate</value>
     </param>
     <param>
       <key>fbsize</key>
@@ -1678,10 +1607,6 @@ UP AT SOME POINT
     <param>
       <key>id</key>
       <value>Stupid_folder</value>
-    </param>
-    <param>
-      <key>mlen</key>
-      <value>median_len</value>
     </param>
     <param>
       <key>period</key>
@@ -2193,108 +2118,6 @@ BY THIS BLOCK
     </param>
   </block>
   <block>
-    <key>blocks_integrate_xx</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>decim</key>
-      <value>median_len</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(1288, 852)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>blocks_integrate_xx_1</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>fbsize</value>
-    </param>
-  </block>
-  <block>
-    <key>blocks_integrate_xx</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>decim</key>
-      <value>median_len</value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(848, 364)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>blocks_integrate_xx_2</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>fbsize</value>
-    </param>
-  </block>
-  <block>
     <key>blocks_multiply_const_vxx</key>
     <param>
       <key>alias</key>
@@ -2434,108 +2257,6 @@ the DC estimate</value>
     <param>
       <key>id</key>
       <value>blocks_multiply_const_vxx_2</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>fbsize</value>
-    </param>
-  </block>
-  <block>
-    <key>blocks_multiply_const_vxx</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value></value>
-    </param>
-    <param>
-      <key>const</key>
-      <value>[0.25]*fbsize</value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(1024, 348)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>blocks_multiply_const_vxx_3</value>
-    </param>
-    <param>
-      <key>type</key>
-      <value>float</value>
-    </param>
-    <param>
-      <key>maxoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>minoutbuf</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>vlen</key>
-      <value>fbsize</value>
-    </param>
-  </block>
-  <block>
-    <key>blocks_multiply_const_vxx</key>
-    <param>
-      <key>alias</key>
-      <value></value>
-    </param>
-    <param>
-      <key>comment</key>
-      <value>Undo the gain effects of the integrator</value>
-    </param>
-    <param>
-      <key>const</key>
-      <value>[0.25]*fbsize</value>
-    </param>
-    <param>
-      <key>affinity</key>
-      <value></value>
-    </param>
-    <param>
-      <key>_enabled</key>
-      <value>True</value>
-    </param>
-    <param>
-      <key>_coordinate</key>
-      <value>(1424, 852)</value>
-    </param>
-    <param>
-      <key>_rotation</key>
-      <value>0</value>
-    </param>
-    <param>
-      <key>id</key>
-      <value>blocks_multiply_const_vxx_4</value>
     </param>
     <param>
       <key>type</key>
@@ -6126,23 +5847,11 @@ def find_rate(srate,fbsize,target):
     #
     # Try to find some other rate
     #
-    # Start high
-    #
-    for trial in numpy.arange(10000.0,30000.0,1.0):
+    for trial in numpy.arange(1250.0,4000.0,1.0):
         decim = float(brate)/float(trial)
         if (decim == float(int(decim))):
-            if (float(int(trial/4.0)) == trial/4.0):
-                return trial
+            return trial
     
-    #
-    # Compromise to lower rates if necessary
-    #       
-    for trial in numpy.arange(5000.0,10000.0,1.0):
-        decim = float(brate)/float(trial)
-        if (decim == float(int(decim))):
-            if (float(int(trial/4.0)) == trial/4.0):
-                return trial
-
 
     rate = float(target)
     decim = int(srate/fbsize/rate)
@@ -6214,9 +5923,9 @@ def build_header_info(outfile,source_name,source_ra,source_dec,freq,bw,fbrate,fb
         return None
 
 
-	#
-	# Haven't done the header yet
-	#
+    #
+    # Haven't done the header yet
+    #
     if (hdr_done == False):
 
         fp = open(outfile, "wb")
@@ -8097,7 +7806,7 @@ rate to accound for that.
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(824, 308)</value>
+      <value>(1064, 348)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -8178,7 +7887,7 @@ rate to accound for that.
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(1224, 780)</value>
+      <value>(1392, 852)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -8353,18 +8062,6 @@ THE 'profile_display' APP.
     <sink_key>0</sink_key>
   </connection>
   <connection>
-    <source_block_id>blocks_integrate_xx_1</source_block_id>
-    <sink_block_id>blocks_multiply_const_vxx_4</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>blocks_integrate_xx_2</source_block_id>
-    <sink_block_id>blocks_multiply_const_vxx_3</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
     <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
     <sink_block_id>virtual_sink_1</sink_block_id>
     <source_key>0</source_key>
@@ -8379,18 +8076,6 @@ THE 'profile_display' APP.
   <connection>
     <source_block_id>blocks_multiply_const_vxx_2</source_block_id>
     <sink_block_id>blocks_float_to_char_0</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>blocks_multiply_const_vxx_3</source_block_id>
-    <sink_block_id>blocks_multiply_const_vxx_2</sink_block_id>
-    <source_key>0</source_key>
-    <sink_key>0</sink_key>
-  </connection>
-  <connection>
-    <source_block_id>blocks_multiply_const_vxx_4</source_block_id>
-    <sink_block_id>blocks_copy_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -8468,7 +8153,7 @@ THE 'profile_display' APP.
   </connection>
   <connection>
     <source_block_id>virtual_source_2</source_block_id>
-    <sink_block_id>blocks_integrate_xx_2</sink_block_id>
+    <sink_block_id>blocks_multiply_const_vxx_2</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -8486,7 +8171,7 @@ THE 'profile_display' APP.
   </connection>
   <connection>
     <source_block_id>virtual_source_3</source_block_id>
-    <sink_block_id>blocks_integrate_xx_1</sink_block_id>
+    <sink_block_id>blocks_copy_0</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
