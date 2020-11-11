@@ -1069,7 +1069,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.maxdelay = int(round(self.delayincr*(fbsize-1)))
         self.delayincr = int(self.delayincr)
         
-        
         #
         # Create a set of ringbuffers to implement delay logic
         #
@@ -1079,7 +1078,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.delaylen = len(self.delayrings[0])
         self.delayptr = 0
 
-        
         #
         # This will *slightly* improve index-calculation performance in the
         #  work function.
@@ -1415,6 +1413,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # That are self.flen--the filterbank size
         #
+        totsamps = 0
         for i in range(int(l/self.flen)):
             #
             # To make the index expression not quite so
@@ -1455,7 +1454,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 # Move to next delay value
                 #
                 delay -= self.delayincr
-
+                
             self.delayptr = (self.delayptr + 1) % self.delaylen
             
             #
@@ -1569,7 +1568,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     self.do_logging()
                     self.sequence += 1
                     self.logcount = self.INTERVAL
-
 
         return len(q)
 </value>
@@ -2143,7 +2141,7 @@ APPLY RFI AND SMOOTHING MASK
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(640, 468)</value>
+      <value>(568, 468)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -5345,6 +5343,57 @@ IT DRIVES THE RFI EXCISION
     </param>
   </block>
   <block>
+    <key>single_pole_iir_filter_xx</key>
+    <param>
+      <key>alpha</key>
+      <value>1.0/2.5</value>
+    </param>
+    <param>
+      <key>alias</key>
+      <value></value>
+    </param>
+    <param>
+      <key>comment</key>
+      <value></value>
+    </param>
+    <param>
+      <key>affinity</key>
+      <value></value>
+    </param>
+    <param>
+      <key>_enabled</key>
+      <value>True</value>
+    </param>
+    <param>
+      <key>_coordinate</key>
+      <value>(776, 468)</value>
+    </param>
+    <param>
+      <key>_rotation</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>id</key>
+      <value>single_pole_iir_filter_xx_3</value>
+    </param>
+    <param>
+      <key>maxoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>minoutbuf</key>
+      <value>0</value>
+    </param>
+    <param>
+      <key>type</key>
+      <value>float</value>
+    </param>
+    <param>
+      <key>vlen</key>
+      <value>fbsize</value>
+    </param>
+  </block>
+  <block>
     <key>parameter</key>
     <param>
       <key>alias</key>
@@ -7636,7 +7685,7 @@ PYTHON HELPER CODE
     </param>
     <param>
       <key>_coordinate</key>
-      <value>(848, 476)</value>
+      <value>(832, 556)</value>
     </param>
     <param>
       <key>_rotation</key>
@@ -7655,15 +7704,12 @@ PYTHON HELPER CODE
     <key>virtual_sink</key>
     <param>
       <key>comment</key>
-      <value>********************************
-This operates at median_len X
-the rate we'll ultimately log to
-.FIL files.
-But the folder applies a median
-filter to the de-dispersed stream
-prior to folding, so we need enough
-rate to accound for that.
-*********************************</value>
+      <value>***************************************
+We now have a signal that has the
+mid-to-long-term DC removed from
+it.  This will imporove DR particularly for
+output to 8-bit .FIL files.
+***************************************</value>
     </param>
     <param>
       <key>_enabled</key>
@@ -8063,7 +8109,7 @@ THE 'profile_display' APP.
   </connection>
   <connection>
     <source_block_id>blocks_multiply_const_vxx_0</source_block_id>
-    <sink_block_id>virtual_sink_1</sink_block_id>
+    <sink_block_id>single_pole_iir_filter_xx_3</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>
@@ -8124,6 +8170,12 @@ THE 'profile_display' APP.
   <connection>
     <source_block_id>single_pole_iir_filter_xx_2</source_block_id>
     <sink_block_id>rfi_probe</sink_block_id>
+    <source_key>0</source_key>
+    <sink_key>0</sink_key>
+  </connection>
+  <connection>
+    <source_block_id>single_pole_iir_filter_xx_3</source_block_id>
+    <sink_block_id>virtual_sink_1</sink_block_id>
     <source_key>0</source_key>
     <sink_key>0</sink_key>
   </connection>

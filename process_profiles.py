@@ -59,13 +59,11 @@ for profset in profsets:
     for profile in profset["profiles"]:
         
         demaxed = list(profile["profile"])
+        lmax = len(demaxed)
         idx = demaxed.index(max(demaxed))
-        avg = 0.0
-        for i in range(len(demaxed)):
-            if (i != idx):
-                avg += demaxed[i]
-        avg /= float(len(demaxed))
-        demaxed[idx] = avg
+        newdemaxed = demaxed[0:idx-int(lmax/30)]
+        newdemaxed += demaxed[idx+int(lmax/30):]
+        demaxed = newdemaxed
         #
         # Determine rough SNR
         #

@@ -69,7 +69,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.maxdelay = int(round(self.delayincr*(fbsize-1)))
         self.delayincr = int(self.delayincr)
         
-        
         #
         # Create a set of ringbuffers to implement delay logic
         #
@@ -79,7 +78,6 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         self.delaylen = len(self.delayrings[0])
         self.delayptr = 0
 
-        
         #
         # This will *slightly* improve index-calculation performance in the
         #  work function.
@@ -415,6 +413,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
         #
         # That are self.flen--the filterbank size
         #
+        totsamps = 0
         for i in range(int(l/self.flen)):
             #
             # To make the index expression not quite so
@@ -455,7 +454,7 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                 # Move to next delay value
                 #
                 delay -= self.delayincr
-
+                
             self.delayptr = (self.delayptr + 1) % self.delaylen
             
             #
@@ -569,6 +568,5 @@ class blk(gr.sync_block):  # other base classes are basic_block, decim_block, in
                     self.do_logging()
                     self.sequence += 1
                     self.logcount = self.INTERVAL
-
 
         return len(q)
