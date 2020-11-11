@@ -561,7 +561,7 @@ filterbank output file</value>
     </param>
     <param>
       <key>value</key>
-      <value>prefix+"/psr-%s-%-.1f-%-.1f-%-9.3f-%d-%d.fil" % (pname, skyf/1.0e6, samp_rate/1.0e6, mjd, fbsize,real_fbrate/4.0)</value>
+      <value>prefix+"/psr-%s-%-.1f-%-.1f-%-9.3f-%d-%d.fil" % (pname, skyf/1.0e6, samp_rate/1.0e6, mjd, fbsize,real_fbrate)</value>
     </param>
   </block>
   <block>
@@ -8055,10 +8055,6 @@ THE 'profile_display' APP.
     <param>
       <key>id</key>
       <value>xmlrpc_server_0</value>
-    </param>
-    <param>
-      <key>logging</key>
-      <value>False</value>
     </param>
     <param>
       <key>port</key>
